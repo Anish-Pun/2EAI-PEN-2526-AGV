@@ -1,10 +1,16 @@
-# Naam van het project
+# [Projectnaam]
 
-![Overzicht](./resources/media/Overview.jpg)
+> **⚠️ Verander deze titel naar de naam van jullie project!**
 
-## Over het project
+![Overzicht](./docs/images/Overview.jpg)
+> **⚠️ Vervang deze afbeelding door een foto van jullie project**
 
-Korte beschrijving van het project: wat is het, waarom is het gemaakt, en wat is de algemene doelstelling?
+## Beschrijving
+
+Voeg hier een korte beschrijving toe van jullie project. Leg uit:
+- Wat doet jullie project?
+- Waarom is het gemaakt?
+- Wat maakt het bijzonder?
 
 ### Sequence of operation
 
@@ -22,18 +28,25 @@ Volg eventueel verdere aanwijzingen die in de terminal worden weergegeven of op 
 
 ## Materialen en methodes
 
-> 💡**Werk op een versiebeheer-vriendelijke manier**
->
-> Gebruik **platte tekstformaten** zoals Markdown of CSV-bestanden. Deze zijn leesbaar in GitHub en goed te volgen in versiebeheer.
->
-> Vermijd het gebruik van externe links naar afbeeldingen of bestanden (zoals datasheets of documenten). Voeg deze lokaal toe in bijvoorbeeld een `media` of `datasheets` map. Externe links kunnen breken wanneer de originele bron verdwijnt of als deze repository wordt hernoemd, geforkt of offline gehaald.
-
-
-- **Hardware**: lijst van gebruikte componenten (bv. sensoren, microcontrollers, actuatoren).
-- **Software**: overzicht van programmeertalen, libraries en tools.
+- **Hardware**: [KiCAD PCB ontwerp, componenten...]
+- **Firmware**: [ModusToolbox, PSoC6, C]
+- **PLC**: [TwinCAT, Structured Text]
+- **Software**: [Python, dashboard/AI tools]
 - **Methodologie**: korte beschrijving van de werkwijze.
 
+_Zie de README in elke map voor details!_
 
+
+
+## Documentatie
+
+Gedetailleerde documentatie is te vinden in de [docs](./docs/) folder:
+
+- [Design Document](./docs/design.md)
+
+- [User Manual](./docs/user-manual.md)
+
+  
 
 ## Resultaten
 
@@ -52,15 +65,30 @@ Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de 
 
 
 
-## Toekomstig werk en problemen
+## Discussie
 
-- Mogelijke uitbreidingen of verbeteringen.
-- Bekende bugs of beperkingen.
+**Wat werkt al?**
+
+- [ ] Hardware ontwerp klaar
+- [ ] PCB geproduceerd
+- [ ] Firmware basis werkt
+- [ ] PLC programma werkt
+- [ ] Dashboard/software werkt
+
+**Komende stappen**
+
+1. ...
+2. ...
+
+**Bekende bugs of beperkingen**
+
 - Link eventueel naar een issue bv. #1
+- ....
 
 
 
 ## Personen
 
-- **Contri Butor1** – _Student_ – [GitHub](https://github.com/CONTRIBUTOR1)
-- **Dieter Vanrykel** – _Docent_ – [GitHub](https://github.com/Vanrykel)
+- Student 1 [@username](https://github.com/student1) (Hardware)
+- Student 2 [@username](https://github.com/student2) (Firmware)
+- Student 3 [@username](https://github.com/student3) (Software)

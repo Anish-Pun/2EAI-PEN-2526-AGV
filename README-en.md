@@ -1,66 +1,93 @@
-# Name of the Project
+# [Project Name]
 
-![Overzicht](./resources/media/Overview.jpg)
+> **⚠️ Change this title to your project name!**
 
-## About the Project
+![Overview](./docs/images/Overview.jpg)
+> **⚠️ Replace this image with a photo of your project**
 
-Brief description of the project: what it is, why it was created, and its main purpose.
+## Description
+
+Add a brief description of your project here. Explain:
+- What does your project do?
+- Why was it created?
+- What makes it special?
 
 ### Sequence of Operation
 
-This section explains what to expect once all hardware and software has been set up according to **Getting Started**. It is intended as a guide for non-technical users.
+Briefly describe what to expect after all hardware and software have been set up according to the steps under **Getting Started**. This section serves as a guide for non-technical users.
 
-1. Connect the board to your computer via USB.
-2. The green LED will automatically turn on to indicate the system is active.
-3. A welcome message will appear in the serial terminal.
-4. The linear slider performs an automatic calibration and moves to the center.
-5. Wait for a beep signal and then place the phone on the slider holder.
+1. Connect the board to the computer via USB.
+2. The green LED automatically turns on to indicate that the system is active.
+3. A welcome message appears in the serial terminal.
+4. The linear slider performs an automatic calibration and moves itself to the center.
+5. Wait for a beep and then place the phone on the slider holder.
 
-Follow any additional instructions shown in the terminal or on the interface.
+Follow any further instructions displayed in the terminal or visible on the interface.
 
 
 
 ## Materials and Methods
 
-> 💡**Version-Control-Friendly Practices**
->
-> Use **plain text formats** like Markdown or CSV files. These are readable on GitHub and well-suited for version control.
->
-> Avoid linking to external files (e.g. datasheets or images). Instead, store them locally in a `media` or `datasheets` folder. External links can break when the source changes or if this repository is renamed, forked, or cloned.
+- **Hardware**: [KiCAD PCB design, components...]
+- **Firmware**: [ModusToolbox, PSoC6, C]
+- **PLC**: [TwinCAT, Structured Text]
+- **Software**: [Python, dashboard/AI tools]
+- **Methodology**: brief description of the approach.
+
+_See the README in each folder for details!_
 
 
-- **Hardware**: list of components used (e.g. sensors, microcontrollers, actuators).
-- **Software**: overview of languages, libraries and tools used.
-- **Methodology**: brief description of the approach taken.
+
+## Documentation
+
+Detailed documentation can be found in the [docs](./docs/) folder:
+
+- [Design Document](./docs/design.md)
+- [User Manual](./docs/user-manual.md)
 
 
 
 ## Results
 
-- Summary of key findings.
-- Include charts, tables, or images as needed.
-- Reflections on performance or reliability.
+- Brief summary of key findings.
+- Any graphs, tables, or images.
+- Reflection on performance or reliability.
 
 
 
 ## Getting Started
 
-Nothing more frustrating than finding good code but not knowing how to run it.
+Nothing more frustrating than finding good code without explanation on how to get it running.
 
-- [ ] Provide a step-by-step how-to guide here.
-- [ ] Explain how to run the program.
+- [ ] Add a step-by-step guide here.
+- [ ] Explain how to start the program.
 
 
 
-## Future Work and Issues
+## Discussion
 
-- Planned extensions or improvements.
-- Known bugs or limitations.
-- Link to a issue if applicable, for example #1
+**What's working already?**
+
+- [ ] Hardware design complete
+- [ ] PCB produced
+- [ ] Firmware basics working
+- [ ] PLC program working
+- [ ] Dashboard/software working
+
+**Next steps**
+
+1. ...
+2. ...
+
+**Known bugs or limitations**
+
+- Link to an issue if applicable, e.g. #1
+- ....
 
 
 
 ## People
 
-- **Contri Butor1** – _Student_ – [GitHub](https://github.com/CONTRIBUTOR1)
-- **Dieter Vanrykel** – _Teacher_ – [GitHub](https://github.com/Vanrykel)
+- Student 1 [@username](https://github.com/student1) (Hardware)
+- Student 2 [@username](https://github.com/student2) (Firmware)
+- Student 3 [@username](https://github.com/student3) (Software)

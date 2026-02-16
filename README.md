@@ -1,14 +1,16 @@
 # [AGV_RCCar]
 
 
-![Overzicht](./docs/images/Overview.jpg)
-> **⚠️ Vervang deze afbeelding door een foto van jullie project**
+![Overzicht](https://github.com/PXLDigital/2EAI-PEN-2324-RCcar/assets/114076101/49f76ad4-2c14-4212-bfe9-b10dfdb63db3)
+
 
 ## Beschrijving
 
 Voeg hier een korte beschrijving toe van jullie project. Leg uit:
 - Wat doet jullie project?
+We sturen een RC_Car door sensoren 
 - Waarom is het gemaakt?
+
 - Wat maakt het bijzonder?
 
 ### Sequence of operation

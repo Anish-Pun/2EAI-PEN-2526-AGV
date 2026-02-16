@@ -17,4 +17,6 @@
 #define MOTOR_C_PIN  P10_2  // Wheel C
 #define MOTOR_D_PIN  P10_3  // Wheel D
 
+// SW2 Start and Stop
+#define CAR_START_STOP_PIN  P0_4
 #endif

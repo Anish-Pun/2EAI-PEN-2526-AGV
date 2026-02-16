@@ -4,6 +4,7 @@
 #include "pins.h"
 #include "ultrasonic.h"
 #include "motor.h"
+#include "button.h"
 
 int main(void) {
     cy_rslt_t result = cybsp_init();
@@ -19,21 +20,38 @@ int main(void) {
 
     ultrasonic_init();
     motor_init();
+    button_init();
+    motor_stop();   // Motors 0% from start
+
+    bool car_running = false;
 
     while(1) {
-        float right = get_distance_right_cm();
-        float left  = get_distance_left_cm();
+        // Check button press
+    	if (button_pressed()) {
+            car_running = !car_running;
+            if (car_running) {
+                printf(" START \r\n");
+            } else {
+                motor_stop();
+                printf(" STOPPED \r\n");
+            }
+        }
 
-        if (right > 50) right = 50;
-        if (left  > 50) left  = 50;
+        // Auto drive + obstacle
+        if (car_running) {
+            float right = get_distance_right_cm();
+            float left = get_distance_left_cm();
 
         printf("R:%.1f L:%.1f ", right, left);
 
-        if (right < 20.0f || left < 20.0f) {
-            motor_stop();
-        } else {
-            motor_forward(60);  // Forward speed
+            if (right < 20.0f || left < 20.0f) {
+                motor_stop();
+                printf(" OBSTACLE STOP\r\n");
+                car_running = false;
+            } else {
+                motor_forward(65);
+            }
         }
-        cyhal_system_delay_ms(200);
+        cyhal_system_delay_ms(100);
     }
 }

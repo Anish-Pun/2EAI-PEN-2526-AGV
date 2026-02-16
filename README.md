@@ -1,6 +1,5 @@
-# [Projectnaam]
+# [AGV_RCCar]
 
-> **⚠️ Verander deze titel naar de naam van jullie project!**
 
 ![Overzicht](./docs/images/Overview.jpg)
 > **⚠️ Vervang deze afbeelding door een foto van jullie project**

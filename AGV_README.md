@@ -89,6 +89,6 @@ Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de 
 
 ## Personen
 
-- Anish Pun [@username](https://github.com/Anish-Pun) (Software)
-- Joel Akem [@username](https://github.com/jjoellie) (Firmware)
-- Kaelig Guillemette [@username](https://github.com/guikae06) (Hardware)
+- Anish Pun [@Anish-Pun](https://github.com/Anish-Pun) (Software)
+- Joel Akem [@jjoellie](https://github.com/jjoellie) (Firmware)
+- Kaelig Guillemette [@guikae06](https://github.com/guikae06) (Hardware)

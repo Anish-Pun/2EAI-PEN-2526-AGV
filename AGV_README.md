@@ -89,6 +89,6 @@ Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de 
 
 ## Personen
 
-- Student 1 [@username](https://github.com/student1) (Hardware)
-- Student 2 [@username](https://github.com/student2) (Firmware)
-- Student 3 [@username](https://github.com/student3) (Software)
+- Anish Pun [@username](https://github.com/Anish-Pun) (Software)
+- Joel Akem [@username](https://github.com/jjoellie) (Firmware)
+- Kaelig Guillemette [@username](https://github.com/guikae06) (Hardware)

@@ -12,11 +12,11 @@
 
 ### ✅ Repository Setup
 
-- [ ] Repository naam aangepast naar jullie projectnaam
-- [ ] README.md titel vervangen door jullie projectnaam  
-- [ ] Teamleden tabel ingevuld met echte namen en GitHub usernames
+- [✅] Repository naam aangepast naar jullie projectnaam
+- [✅] README.md titel vervangen door jullie projectnaam  
+- [✅] Teamleden tabel ingevuld met echte namen en GitHub usernames
 - [ ] Project beschrijving ingevuld (2-3 zinnen)
-- [ ] Overview foto toegevoegd in `docs/images/` (foto van breadboard, schets, of concept)
+- [✅] Overview foto toegevoegd in `docs/images/` (foto van breadboard, schets, of concept)
 
 ### ✅ .gitignore Controle
 
@@ -26,7 +26,7 @@
 ### ✅ Planning
 
 - [ ] Project overzicht geschreven ("Sequence of operation")
-- [ ] Rollen verdeeld in het team (wie doet hardware, firmware, software, etc.)
+- [✅] Rollen verdeeld in het team (wie doet hardware, firmware, software, etc.)
 - [ ] Eerste GitHub issues aangemaakt voor de taken
 
 ---
@@ -37,7 +37,7 @@
 
 - [ ] Lijst van componenten ingevuld (wat hebben jullie nodig?)
 - [ ] Blokdiagram of schets toegevoegd (mag handmatig zijn in week 2) in `docs/diagrams/`
-- [ ] Eventuele datasheets toegevoegd in `docs/datasheets/`
+- [✅] Eventuele datasheets toegevoegd in `docs/datasheets/`
 
 ### ✅ Software (`src/README.md`)
 

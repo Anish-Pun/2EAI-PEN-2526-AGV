@@ -88,6 +88,6 @@ Nothing more frustrating than finding good code without explanation on how to ge
 
 ## People
 
-- Student 1 [@username](https://github.com/student1) (Hardware)
-- Student 2 [@username](https://github.com/student2) (Firmware)
-- Student 3 [@username](https://github.com/student3) (Software)
+- Anish Pun [@Anish-Pun](https://github.com/Anish-Pun) (Software)
+- Joel Akem [@jjoellie](https://github.com/jjoellie) (Firmware)
+- Kaelig Guillemette [@guikae06](https://github.com/guikae06) (Hardware)

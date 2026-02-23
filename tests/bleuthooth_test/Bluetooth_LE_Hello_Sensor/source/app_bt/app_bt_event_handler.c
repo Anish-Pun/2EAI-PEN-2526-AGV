@@ -385,12 +385,26 @@ void app_bt_scan_result_callback(wiced_bt_ble_scan_results_t *p_scan_result,
 {
     if (p_scan_result)
     {
-        printf("Device Found | RSSI: %d | Address: ",
-               p_scan_result->rssi);
+        uint8_t length;
+        uint8_t *p_name;
 
-        print_bd_address(p_scan_result->remote_bd_addr);
+        p_name = wiced_bt_ble_check_advertising_data(
+                     p_adv_data,
+                     BTM_BLE_ADVERT_TYPE_NAME_COMPLETE,
+                     &length);
+
+        if (p_name)
+        {
+            printf("Name: %.*s | RSSI: %d | Address: ",
+                   length, p_name, p_scan_result->rssi);
+
+            print_bd_address(p_scan_result->remote_bd_addr);
+        }
     }
 }
+
+
+
 
 
 

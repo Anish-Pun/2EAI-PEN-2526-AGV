@@ -15,12 +15,12 @@
 - [x] Repository naam aangepast naar jullie projectnaam
 - [x] README.md titel vervangen door jullie projectnaam  
 - [x] Teamleden tabel ingevuld met echte namen en GitHub usernames
-- [ ] Project beschrijving ingevuld (2-3 zinnen)
+- [x] Project beschrijving ingevuld (2-3 zinnen)
 - [x] Overview foto toegevoegd in `docs/images/` (foto van breadboard, schets, of concept)
 
 ### ✅ .gitignore Controle
 
-- [ ] `.gitignore` bekeken en aangepast indien nodig
+- [x] `.gitignore` bekeken en aangepast indien nodig
 - [ ] Getest dat grote bestanden/build outputs niet worden gecommit
 
 ### ✅ Planning

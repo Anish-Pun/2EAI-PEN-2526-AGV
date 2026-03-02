@@ -8,7 +8,7 @@ bool Motion_Detected = false;
 void ISR_mpu6050(void *callback_arg, cyhal_gpio_event_t event) {
   motor_stop();
   Motion_Detected = true;
-  printf("IMU LIFT DETECTED - EMERGENCY STOP\n\r");
+  // printf("IMU LIFT DETECTED - EMERGENCY STOP\n\r");
 }
 
 cyhal_gpio_callback_data_t MPU6050_cb_data = {

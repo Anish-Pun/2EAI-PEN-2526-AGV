@@ -82,7 +82,7 @@ Main programma loop:
 
 ## 📚 Resources
 
-- [PSoC 6 Datasheet](/docs/datasheets/P5oK6.pdf)
+- [PSoC 6 Datasheet]
 
 ## ✅ Checklist
 

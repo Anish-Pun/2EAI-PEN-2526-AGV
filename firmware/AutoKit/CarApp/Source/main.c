@@ -72,27 +72,34 @@ int main(void) {
                 motor_stop();
                 printf("\n\rLIFT DETECTED - STOP\n\r");
                 car_running = false;
-                Motion_Detected = false;  // Reset flag
-            }
-            else if (right < 20.0f || left < 20.0f)
-            {
-                // motor_stop();
-                // printf("\n\rOBSTACLE STOP\n\r");
-                // car_running = false;
-            }
-            else if (right < 25.0f)
-            {
-                motor_turn_left(80);
-            }
-            else if (left < 25.0f)
-            {
-                motor_turn_right(80);
+                Motion_Detected = false;
             }
             else
             {
-                motor_forward(65);
+                //  Ultrasonic  logic
+                // Both < 20cm => stop
+                if (right < 20.0f && left < 20.0f)
+                {
+                    motor_stop();
+                    printf("\n\rBOTH OBSTACLES - STOP\n\r");
+                    car_running = false;
+                }
+                // Right < 20cm => turn left
+                else if (right < 20.0f)
+                {
+                    motor_turn_left(80);
+                }
+                // Left < 20cm => turn right
+                else if (left < 20.0f)
+                {
+                    motor_turn_right(80);
+                }
+                // Clear => forward
+                else
+                {
+                    motor_forward(65);
+                }
             }
-
             cyhal_system_delay_ms(50);
         }
     }

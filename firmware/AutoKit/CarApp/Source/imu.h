@@ -18,7 +18,7 @@
 #define MREG_INT_ENABLE           0x38
 #define MPU6050_MOTION_DETECT_EN  0x40
 
-#define ACCEL_XOUT_H              0x3B  /
+#define ACCEL_XOUT_H              0x3B
 #define GYRO_XOUT_H               0x43
 
 extern cyhal_i2c_t i2c;

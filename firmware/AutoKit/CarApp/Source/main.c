@@ -6,6 +6,7 @@
 #include "motor.h"
 #include "button.h"
 #include "imu.h"
+#include <stdio.h>
 
 int main(void) {
     cy_rslt_t result = cybsp_init();
@@ -15,7 +16,7 @@ int main(void) {
     result = cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
     if (result != CY_RSLT_SUCCESS) CY_ASSERT(0);
 
-    // Fix 1: Force immediate prints (no buffering)
+    // Force immediate prints
     setvbuf(stdout, NULL, _IONBF, 0);
 
     printf("\033[2J\033[H");
@@ -25,8 +26,6 @@ int main(void) {
     ultrasonic_init();
     motor_init();
     button_init();
-
-    extern bool Motion_Detected;
     imu_init();
 
     cyhal_system_delay_ms(1000);
@@ -39,8 +38,9 @@ int main(void) {
         if (button_pressed()) {
             car_running = !car_running;
             Motion_Detected = false;
-            if (car_running) {
-                printf("\n\rSTART\n\r");  // New line + flush
+            if (car_running)
+            {
+                printf("\n\rSTART\n\r");
                 motor_forward(65);
             } else {
                 motor_stop();
@@ -55,37 +55,45 @@ int main(void) {
             Motion_Detected = false;
         }
 
-        if (car_running) {
-            // IMU accel
-            uint8_t accel[6];
-            uint8_t reg = ACCEL_XOUT_H;
-            cyhal_i2c_master_write(&i2c, MPU6050_ADDR, &reg, 1, 10, false);
-            cyhal_i2c_master_read(&i2c, MPU6050_ADDR, accel, 6, 10, true);
-            int16_t ax = (int16_t)(accel[0] << 8 | accel[1]);
-            int16_t ay = (int16_t)(accel[2] << 8 | accel[3]);
-            int16_t az = (int16_t)(accel[4] << 8 | accel[5]);
+        if (car_running)
+        {
+            int16_t ax, ay, az, gx, gy, gz;
+            imu_read_all(&ax, &ay, &az, &gx, &gy, &gz);
 
-            // Ultrasonic
             float right = get_distance_right_cm();
             float left  = get_distance_left_cm();
 
-            // SINGLE LINE UPDATE
-            printf("R:%5.1f L:%5.1f AX:%6d AY:%6d AZ:%6d Mot:%d\r",
-                   right, left, ax, ay, az, (int)Motion_Detected);
+            printf("R:%5.1f L:%5.1f AX:%6d AY:%6d AZ:%6d GX:%6d GY:%6d GZ:%6d Mot:%d\r",
+                   right, left, ax, ay, az, gx, gy, gz, (int)Motion_Detected);
 
-            // Motor logic (no prints)
-            if (right < 20.0f || left < 20.0f) {
+            // Lift detect
+            if (az < 8000 || Motion_Detected)
+            {
                 motor_stop();
-                printf("\n\rOBSTACLE STOP\n\r");
+                printf("\n\rLIFT DETECTED - STOP\n\r");
                 car_running = false;
-            } else if (right < 20.0f) {
+                Motion_Detected = false;  // Reset flag
+            }
+            else if (right < 20.0f || left < 20.0f)
+            {
+                // motor_stop();
+                // printf("\n\rOBSTACLE STOP\n\r");
+                // car_running = false;
+            }
+            else if (right < 25.0f)
+            {
                 motor_turn_left(80);
-            } else if (left < 20.0f) {
+            }
+            else if (left < 25.0f)
+            {
                 motor_turn_right(80);
-            } else {
+            }
+            else
+            {
                 motor_forward(65);
             }
-            cyhal_system_delay_ms(100);
+
+            cyhal_system_delay_ms(50);
         }
     }
 }

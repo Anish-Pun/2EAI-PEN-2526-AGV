@@ -1,7 +1,7 @@
 # [AGV_RCCar]
 
 
-![Overzicht](https://github.com/PXLDigital/2EAI-PEN-2324-RCcar/assets/114076101/49f76ad4-2c14-4212-bfe9-b10dfdb63db3)
+# Overzicht
 
 
 ## Beschrijving

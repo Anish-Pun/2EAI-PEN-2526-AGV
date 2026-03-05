@@ -24,7 +24,7 @@ hardware/
 
 | Component | Type/Model | Functie | Datasheet | Aantal |
 |-----------|-----------|---------|-----------|--------|
-| Microcontroller | PSoC 6 | Hoofdcontroller | [Link](/docs/datasheets/P5oK6.pdf) | 1 |
+| Microcontroller | PSoC 6 | Hoofdcontroller | [Link]()| 1 |
 | Sensor | [Type] | [Functie] | [Link](/docs/datasheets/) | 1 |
 | ... | ... | ... | ... | ... |
 

@@ -5,8 +5,6 @@
 void motor_init(void);
 void motor_forward(uint8_t speed);
 void motor_stop(void);
-void motor_turn_left(uint8_t speed);
-void motor_turn_right(uint8_t speed);
 
 extern cyhal_pwm_t pwm_a, pwm_b, pwm_c, pwm_d;
 

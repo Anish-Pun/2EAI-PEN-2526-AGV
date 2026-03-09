@@ -42,7 +42,7 @@ hardware/
 
 > **Voeg hier een afbeelding of diagram toe waarin de bedrading en verbindingen van de componenten worden weergegeven.**
 >
-> - Voor week 1-2: Een handmatige schets is OK
+> - Kijken bij [AGV_Schema.png](/docs/images/AGV_Schema.png)
 > - Later: Fritzing of KiCAD schematic export (PNG of PDF) 
 
 ---

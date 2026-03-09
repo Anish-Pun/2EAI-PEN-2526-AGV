@@ -5,13 +5,14 @@
 #include "ultrasonic.h"
 #include "motor.h"
 #include "button.h"
+#include "imu.h"
+#include <stdio.h>
 
 int main(void) {
     cy_rslt_t result = cybsp_init();
     if (result != CY_RSLT_SUCCESS) CY_ASSERT(0);
 
     __enable_irq();
-
     result = cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
     if (result != CY_RSLT_SUCCESS) CY_ASSERT(0);
 
@@ -39,7 +40,7 @@ int main(void) {
                 motor_forward(65);
             } else {
                 motor_stop();
-                printf(" STOPPED \r\n");
+                printf("\n\rSTOPPED\n\r");
             }
         }
 
@@ -51,7 +52,7 @@ int main(void) {
 
             if (right < 20.0f && left < 20.0f) {
                 motor_stop();
-                printf(" OBSTACLE STOP\r\n");
+                printf("\n\rLIFT DETECTED - STOP\n\r");
                 car_running = false;
             } else if (right < 20.0f) {
                 motor_turn_right(80);      // Right blocked → sharp LEFT
@@ -62,7 +63,7 @@ int main(void) {
             } else {
                 motor_forward(65);
             }
+            cyhal_system_delay_ms(50);
         }
-        cyhal_system_delay_ms(100);
     }
 }

@@ -18,7 +18,7 @@ void motor_forward(uint8_t speed) {
     cyhal_pwm_set_duty_cycle(&pwm_b, speed, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_c, speed, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_d, speed, 1000);
-    printf("Forward %d%%\r\n", speed);
+    //printf("Forward %d%%\r\n", speed);
 }
 
 void motor_stop(void) {

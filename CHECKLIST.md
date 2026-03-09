@@ -21,13 +21,13 @@
 ### ✅ .gitignore Controle
 
 - [x] `.gitignore` bekeken en aangepast indien nodig
-- [ ] Getest dat grote bestanden/build outputs niet worden gecommit
+- [X] Getest dat grote bestanden/build outputs niet worden gecommit
 
 ### ✅ Planning
 
 - [ ] Project overzicht geschreven ("Sequence of operation")
 - [x] Rollen verdeeld in het team (wie doet hardware, firmware, software, etc.)
-- [ ] Eerste GitHub issues aangemaakt voor de taken
+- [X] Eerste GitHub issues aangemaakt voor de taken
 
 ---
 

@@ -21,7 +21,7 @@
 ### ✅ .gitignore Controle
 
 - [x] `.gitignore` bekeken en aangepast indien nodig
-- [X] Getest dat grote bestanden/build outputs niet worden gecommit
+- [ ] Getest dat grote bestanden/build outputs niet worden gecommit
 
 ### ✅ Planning
 

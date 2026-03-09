@@ -6,6 +6,7 @@
 #include "motor.h"
 #include "button.h"
 #include "imu.h"
+#include "speed.h"
 #include <stdio.h>
 
 int main(void) {

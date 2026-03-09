@@ -6,6 +6,7 @@
 #include "motor.h"
 #include "button.h"
 #include "imu.h"
+#include "speed.h"
 #include <stdio.h>
 
 int main(void) {
@@ -27,6 +28,7 @@ int main(void) {
     motor_init();
     button_init();
     imu_init();
+    speed_init();
 
     cyhal_system_delay_ms(1000);
     motor_stop();
@@ -38,6 +40,7 @@ int main(void) {
         if (button_pressed()) {
             car_running = !car_running;
             Motion_Detected = false;
+            reset_encoders();
             if (car_running)
             {
                 printf("\n\rSTART\n\r");
@@ -63,8 +66,12 @@ int main(void) {
             float right = get_distance_right_cm();
             float left  = get_distance_left_cm();
 
-            printf("R:%5.1f L:%5.1f AX:%6d AY:%6d AZ:%6d GX:%6d GY:%6d GZ:%6d Mot:%d\r",
-                   right, left, ax, ay, az, gx, gy, gz, (int)Motion_Detected);
+            // Speed prints
+            float spd_r = get_speed_right_kmh();
+            float spd_l = get_speed_left_kmh();
+
+            printf("R:%5.1f L:%5.1f SPD_R:%.1f SPD_L:%.1f AX:%6d AY:%6d AZ:%6d Mot:%d\r",
+                   right, left, spd_r, spd_l, ax, ay, az, (int)Motion_Detected);
 
             // Lift detect
             if (az < 8000 || Motion_Detected)
@@ -76,8 +83,7 @@ int main(void) {
             }
             else
             {
-                //  Ultrasonic  logic
-                // Both < 20cm => stop
+                // Ultrasonic logic
                 if (right < 20.0f && left < 20.0f)
                 {
                     motor_stop();

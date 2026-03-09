@@ -9,8 +9,8 @@
 - [X] [README.md](/docs/README.md) (gedeeltelijk)
 - [X] [user-manual.md](/docs/user-manual.md) (niets te veranderen)
 - [X] [README.md](/hardware/README.md)
-- [X] [README.md](/hardware/RC_CarT/LeegDoc.md)
-- [X] [README.md](/hardware/RC_MiniCar/LeegDoc.md)
+- [X] [README.md](/hardware/RC_CarT/README.md)
+- [X] [README.md](/hardware/RC_MiniCar/README.md)
 - [X] [README.md](/tests/README.md)
 
 # Datasheet aangevuld

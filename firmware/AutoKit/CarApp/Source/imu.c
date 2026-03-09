@@ -82,7 +82,7 @@ void InitI2C(void)
 void mpu6050_enable_interrupts(void)
 {
     uint8_t buffer[2];
-    uint8_t motion_threshold = 8;
+    uint8_t motion_threshold = 20;
 
     // Reset signal paths (as you had it)
     buffer[0] = 0x68; buffer[1] = 0x07;

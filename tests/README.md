@@ -8,7 +8,7 @@ Deze folder bevat alle test bestanden of tools voor het project.
 5. **Mock external dependencies:** Database calls, API calls, etc.
 
 
-## Test DC motor RC CarT met arduino [Link](/test_motor/test_motor.ino)
+## Test DC motor RC CarT met arduino
 
 ```c
 // MD22 Analog + Turn Mode Test via PWM

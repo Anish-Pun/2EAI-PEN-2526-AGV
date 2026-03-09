@@ -35,7 +35,7 @@ hardware/
 | DC Motor | [Type] | Aansturing | Geen datasheet [Link](/docs/datasheets/) | 4 | Mini RC Car |
 | DC Converter | [Type] | Spanning omvormen | geen datasheet [Link](/docs/datasheets/) | 1 | RC CarT |
 | Motor Driver | [MD22] | Aansturing | [Link](/docs/datasheets/MD22_TechnicalDocumentation.pdf) | 1 | RC CarT |
-| Motor Driver | [DRV8843] | Aansturing | [Link](/docs/datasheets/DRV8843.pdf) | 2 | Mini RC Car |
+| Motor Driver | [DRV8843] | Aansturing | [Link](/docs/datasheets/drv8843.pdf) | 2 | Mini RC Car |
 | ... | ... | ... | ... | ... | ... |
 
 **Vul deze tabel in met:**

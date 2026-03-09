@@ -15,7 +15,7 @@ docs/
 |   ├──RM-MPU-6000A.pdf
 |   ├──drv8843.pdf
 |   ├──git-cheat-sheet-education.pdf
-|   ├──infineon-cy8cproto-062-4343w-psoc-6-wi-fi-bt-prototyping-kit-guide-usermanual-en.pdf
+|   ├──PSoC6.pdf
 |   └──p587610-KY-033-Joy-IT.pdf
 ├── CONTRIBUTING.md 
 ├── README.md   

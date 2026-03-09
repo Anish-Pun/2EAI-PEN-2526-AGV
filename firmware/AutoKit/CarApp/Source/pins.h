@@ -25,5 +25,8 @@
 #define IMU_SCL P6_0
 #define MPU_INTERRUPT P10_5
 
+// SPEED ENCODERS
+#define ENCODER_RIGHT P9_6
+#define ENCODER_LEFT  P9_7
 
 #endif

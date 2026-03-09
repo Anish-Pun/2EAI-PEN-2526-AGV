@@ -1,4 +1,4 @@
-# [AGV_RCCar]
+# AGV_RCCar
 
 
 # Overzicht

@@ -12,6 +12,7 @@
 - [X] [README.md](/hardware/RC_CarT/README.md)
 - [X] [README.md](/hardware/RC_MiniCar/README.md)
 - [X] [README.md](/tests/README.md)
+- [X] [Overview.jpg] verwijdert en verandert door [RC_Car.gif]
 
 # Datasheet aangevuld
 

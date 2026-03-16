@@ -3,6 +3,7 @@
 cyhal_i2c_t i2c;
 cyhal_gpio_t MPU_interrupt;
 bool Motion_Detected = false;
+static bool imu_i2c_initialized = false;
 
 // Calibration offsets (tune these for zero when flat)
 int16_t calib_ax = -950, calib_ay = -300, calib_az = 0;
@@ -22,11 +23,13 @@ static cyhal_gpio_callback_data_t MPU6050_cb_data =
     .callback_arg = NULL
 };
 
-void InitI2C(void)
+cy_rslt_t InitI2C(void)
 {
     printf("InitI2C...\n\r");
 
     cy_rslt_t result;
+
+    imu_i2c_initialized = false;
 
     cyhal_i2c_cfg_t i2c_cfg =
     {
@@ -39,14 +42,14 @@ void InitI2C(void)
     if (result != CY_RSLT_SUCCESS)
     {
         printf("I2C init FAILED: 0x%08lX\n\r", (unsigned long)result);
-        return;
+        return result;
     }
 
     result = cyhal_i2c_configure(&i2c, &i2c_cfg);
     if (result != CY_RSLT_SUCCESS)
     {
         printf("I2C configure FAILED: 0x%08lX\n\r", (unsigned long)result);
-        return;
+        return result;
     }
 
     // Wake up MPU6050
@@ -55,7 +58,7 @@ void InitI2C(void)
     if (result != CY_RSLT_SUCCESS)
     {
         printf("MPU wake write FAILED: 0x%08lX\n\r", (unsigned long)result);
-        return;
+        return result;
     }
 
     // WHO_AM_I check
@@ -66,25 +69,28 @@ void InitI2C(void)
     if (result != CY_RSLT_SUCCESS)
     {
         printf("WHO_AM_I reg write FAILED: 0x%08lX\n\r", (unsigned long)result);
-        return;
+        return result;
     }
 
     result = cyhal_i2c_master_read(&i2c, MPU6050_ADDR, &whoami, 1, 10, true);
     if (result != CY_RSLT_SUCCESS)
     {
         printf("WHO_AM_I read FAILED: 0x%08lX\n\r", (unsigned long)result);
-        return;
+        return result;
     }
 
     printf("IMU WHO_AM_I: 0x%02X (expected 0x%02X)\n\r", whoami, EXPECTED_WHO_AM_I);
+
+    imu_i2c_initialized = true;
+    return CY_RSLT_SUCCESS;
 }
 
 void mpu6050_enable_interrupts(void)
 {
     uint8_t buffer[2];
-    uint8_t motion_threshold = 20;
+    uint8_t motion_threshold = 50;
 
-    // Reset signal paths (as you had it)
+    // Reset signal paths
     buffer[0] = 0x68; buffer[1] = 0x07;
     cyhal_i2c_master_write(&i2c, MPU6050_ADDR, buffer, 2, 10, true);
 
@@ -92,7 +98,7 @@ void mpu6050_enable_interrupts(void)
     buffer[0] = INT_PIN_CFG; buffer[1] = 0x10;
     cyhal_i2c_master_write(&i2c, MPU6050_ADDR, buffer, 2, 10, true);
 
-    // Accel full scale config (as you had it)
+    // Accel full scale config
     buffer[0] = 0x1C; buffer[1] = 0x01;
     cyhal_i2c_master_write(&i2c, MPU6050_ADDR, buffer, 2, 10, true);
 
@@ -123,13 +129,22 @@ void mpu6050_enable_interrupts(void)
 
 void imu_init(void)
 {
-    InitI2C();
+    cy_rslt_t result = InitI2C();
+    if (result != CY_RSLT_SUCCESS)
+    {
+        printf("IMU init skipped (I2C not initialized)\n\r");
+        return;
+    }
+
     mpu6050_enable_interrupts();
 }
 
 void imu_read_all(int16_t *ax, int16_t *ay, int16_t *az,
                   int16_t *gx, int16_t *gy, int16_t *gz)
 {
+    if (!imu_i2c_initialized)
+        return;
+
     uint8_t data[14];
     uint8_t reg = ACCEL_XOUT_H;
 

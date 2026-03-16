@@ -7,6 +7,7 @@
 #include "button.h"
 #include "imu.h"
 #include "speed.h"
+#include "self_driving.h"
 #include <stdio.h>
 
 int main(void) {
@@ -22,7 +23,6 @@ int main(void) {
 
     printf("\033[2J\033[H");
     printf("Car App\n\r");
-    printf("<20cm = STOP\n\r");
 
     ultrasonic_init();
     motor_init();
@@ -30,83 +30,29 @@ int main(void) {
     imu_init();
     speed_init();
 
-    cyhal_system_delay_ms(1000);
+    cyhal_system_delay_ms(200);
     motor_stop();
-    printf("Test OK. Press SW2!\n\r");
 
-    bool car_running = false;
+    printf("Self-driving ready. Press SW2 to START/STOP\n\r");
+
+    bool self_driving_enabled = false;
 
     while(1) {
         if (button_pressed()) {
-            car_running = !car_running;
-            Motion_Detected = false;
-            reset_encoders();
-            if (car_running)
-            {
-                printf("\n\rSTART\n\r");
-                motor_forward(65);
+            if (self_driving_enabled && self_driving_is_halted()) {
+                self_driving_enter();
             } else {
-                motor_stop();
-                printf("\n\rSTOPPED\n\r");
-            }
-        }
-
-        if (Motion_Detected) {
-            motor_stop();
-            printf("\n\rEMERGENCY LIFT STOP - Press SW2!\n\r");
-            car_running = false;
-            Motion_Detected = false;
-        }
-
-        if (car_running)
-        {
-            int16_t ax, ay, az, gx, gy, gz;
-            imu_read_all(&ax, &ay, &az, &gx, &gy, &gz);
-
-            float right = get_distance_right_cm();
-            float left  = get_distance_left_cm();
-
-            // Speed prints
-            float spd_r = get_speed_right_kmh();
-            float spd_l = get_speed_left_kmh();
-
-            printf("R:%5.1f L:%5.1f SPD_R:%.1f SPD_L:%.1f AX:%6d AY:%6d AZ:%6d Mot:%d\r",
-                   right, left, spd_r, spd_l, ax, ay, az, (int)Motion_Detected);
-
-            // Lift detect
-            if (az < 8000 || Motion_Detected)
-            {
-                motor_stop();
-                printf("\n\rLIFT DETECTED - STOP\n\r");
-                car_running = false;
-                Motion_Detected = false;
-            }
-            else
-            {
-                // Ultrasonic logic
-                if (right < 20.0f && left < 20.0f)
-                {
-                    motor_stop();
-                    printf("\n\rBOTH OBSTACLES - STOP\n\r");
-                    car_running = false;
-                }
-                // Right < 20cm => turn left
-                else if (right < 20.0f)
-                {
-                    motor_turn_left(80);
-                }
-                // Left < 20cm => turn right
-                else if (left < 20.0f)
-                {
-                    motor_turn_right(80);
-                }
-                // Clear => forward
+                self_driving_enabled = !self_driving_enabled;
+                if (self_driving_enabled)
+                    self_driving_enter();
                 else
-                {
-                    motor_forward(65);
-                }
+                    self_driving_exit();
             }
-            cyhal_system_delay_ms(50);
         }
+
+        if (self_driving_enabled)
+            self_driving_step();
+        else
+            cyhal_system_delay_ms(50);
     }
 }

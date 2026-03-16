@@ -18,7 +18,6 @@ void motor_forward(uint8_t speed) {
     cyhal_pwm_set_duty_cycle(&pwm_b, speed, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_c, speed, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_d, speed, 1000);
-    //printf("Forward %d%%\r\n", speed);
 }
 
 void motor_stop(void) {
@@ -26,7 +25,6 @@ void motor_stop(void) {
     cyhal_pwm_set_duty_cycle(&pwm_b, 0, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_c, 0, 1000);
     cyhal_pwm_set_duty_cycle(&pwm_d, 0, 1000);
-    printf("STOPPED\r\n");
 }
 
 // LEFT TURN
@@ -36,7 +34,6 @@ void motor_turn_left(uint8_t speed) {
     cyhal_pwm_set_duty_cycle(&pwm_b, 0, 1000);      // Right side OFF
     cyhal_pwm_set_duty_cycle(&pwm_c, speed, 1000);  // Left side ON
     cyhal_pwm_set_duty_cycle(&pwm_d, 0, 1000);      // Right side OFF
-    printf("Turn LEFT %d%% \r\n", speed);
 }
 
 // RIGHT TURN
@@ -46,5 +43,4 @@ void motor_turn_right(uint8_t speed) {
     cyhal_pwm_set_duty_cycle(&pwm_b, speed, 1000);  // Right side ON
     cyhal_pwm_set_duty_cycle(&pwm_c, 0, 1000);      // Left side OFF
     cyhal_pwm_set_duty_cycle(&pwm_d, speed, 1000);  // Right side ON
-    printf("Turn RIGHT %d%% \r\n", speed);
 }

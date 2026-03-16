@@ -1,17 +1,13 @@
-# [AGV_RCCar]
+# AGV_RCCar
 
 
-# Overzicht
+![Overzicht](./docs/images/RC_Car.gif)
 
 
 ## Beschrijving
 
-Voeg hier een korte beschrijving toe van jullie project. Leg uit:
-- Wat doet jullie project?
-We sturen een RC_Car door sensoren 
-- Waarom is het gemaakt?
-
-- Wat maakt het bijzonder?
+Ons project bestaat uit het ontwikkelen van een RC-car die zowel manueel als autonoom kan worden bestuurd. In de manuele modus wordt de wagen aangestuurd via een Bluetooth-verbinding, terwijl hij in de autonome modus gebruikmaakt van een ultrasone sensor en een line tracker om zelfstandig te rijden en obstakels te vermijden.
+Het doel van dit project is om praktijkervaring op te doen met embedded systemen, sensoren en draadloze communicatie. Wat het project bijzonder maakt, is de combinatie van real-time besturing en autonome besluitvorming binnen één geïntegreerd systeem.
 
 ### Sequence of operation
 
@@ -29,10 +25,9 @@ Volg eventueel verdere aanwijzingen die in de terminal worden weergegeven of op 
 
 ## Materialen en methodes
 
-- **Hardware**: [KiCAD PCB ontwerp, componenten...]
-- **Firmware**: [ModusToolbox, PSoC6, C]
-- **PLC**: [TwinCAT, Structured Text]
-- **Software**: [Python, dashboard/AI tools]
+- **Hardware**: MD22, ...
+- **Firmware**: ModusToolbox, PSoC6, Arduino, ESP32
+- **Software**: C
 - **Methodologie**: korte beschrijving van de werkwijze.
 
 _Zie de README in elke map voor details!_
@@ -73,8 +68,6 @@ Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de 
 - [ ] Hardware ontwerp klaar
 - [ ] PCB geproduceerd
 - [ ] Firmware basis werkt
-- [ ] PLC programma werkt
-- [ ] Dashboard/software werkt
 
 **Komende stappen**
 

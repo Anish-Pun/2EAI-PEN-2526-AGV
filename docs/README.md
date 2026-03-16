@@ -7,8 +7,20 @@ Deze folder bevat alle documenten met bijhorende media en resource bestanden voo
 ```
 docs/
 ├── images/              # Afbeeldingen
-├── videos/              # Video bestanden
-└── datasheets/          # Datasheets
+|   ├── AGV_Schema.png
+|   └── RC_Car.gif
+├── datasheets/          # Datasheets
+|   ├──0900766b8170d70c.pdf
+|   ├──HCSR04.pdf
+|   ├──RM-MPU-6000A.pdf
+|   ├──drv8843.pdf
+|   ├──git-cheat-sheet-education.pdf
+|   ├──PSoC6.pdf
+|   └──p587610-KY-033-Joy-IT.pdf
+├── CONTRIBUTING.md 
+├── README.md   
+├── design.md
+└── user-manual.md
 ```
 
 ## Afbeeldingen

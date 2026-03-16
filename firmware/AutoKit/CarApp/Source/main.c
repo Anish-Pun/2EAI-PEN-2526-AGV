@@ -8,6 +8,7 @@
 #include "imu.h"
 #include "speed.h"
 #include "self_driving.h"
+#include "remote_control.h"
 #include <stdio.h>
 
 int main(void) {
@@ -33,26 +34,36 @@ int main(void) {
     cyhal_system_delay_ms(200);
     motor_stop();
 
-    printf("Self-driving ready. Press SW2 to START/STOP\n\r");
+    printf("Bluetooth mode ready (default). Press SW2 to switch to self driving mode.\n\r");
 
-    bool self_driving_enabled = false;
+    typedef enum {
+        MODE_BLUETOOTH = 0,
+        MODE_SELF_DRIVING
+    } app_mode_t;
+
+    app_mode_t mode = MODE_BLUETOOTH;
+    remote_control_enter();
 
     while(1) {
         if (button_pressed()) {
-            if (self_driving_enabled && self_driving_is_halted()) {
+            if (mode == MODE_SELF_DRIVING && self_driving_is_halted()) {
                 self_driving_enter();
             } else {
-                self_driving_enabled = !self_driving_enabled;
-                if (self_driving_enabled)
+                if (mode == MODE_BLUETOOTH) {
+                    remote_control_exit();
+                    mode = MODE_SELF_DRIVING;
                     self_driving_enter();
-                else
+                } else {
                     self_driving_exit();
+                    mode = MODE_BLUETOOTH;
+                    remote_control_enter();
+                }
             }
         }
 
-        if (self_driving_enabled)
+        if (mode == MODE_SELF_DRIVING)
             self_driving_step();
         else
-            cyhal_system_delay_ms(50);
+            remote_control_step();
     }
 }

@@ -60,7 +60,7 @@
 #include "wiced_bt_stack.h"
 #include "wiced_memory.h"
 #include "cybt_platform_config.h"
-#include "cycfg_gatt_db.h"
+#include "wiced_bt_gatt.h"
 
 
 /*******************************************************************************

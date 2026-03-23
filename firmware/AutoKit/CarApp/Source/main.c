@@ -9,7 +9,64 @@
 #include "speed.h"
 #include "self_driving.h"
 #include "remote_control.h"
+#include <FreeRTOS.h>
+#include <task.h>
 #include <stdio.h>
+
+#define APP_TASK_STACK_SIZE    (4096u)
+#define APP_TASK_PRIORITY      (5u)
+
+static void app_task(void *arg)
+{
+    (void)arg;
+
+    ultrasonic_init();
+    motor_init();
+    button_init();
+    imu_init();
+    speed_init();
+
+    cyhal_system_delay_ms(200);
+    motor_stop();
+
+    printf("Bluetooth mode ready (default). Press SW2 to switch to self driving mode.\n\r");
+
+    remote_control_set_enabled(1);
+    remote_control_enter();
+
+    typedef enum {
+        MODE_BLUETOOTH = 0,
+        MODE_SELF_DRIVING
+    } app_mode_t;
+
+    app_mode_t mode = MODE_BLUETOOTH;
+
+    while (1)
+    {
+        if (button_pressed()) {
+            if (mode == MODE_SELF_DRIVING && self_driving_is_halted()) {
+                self_driving_enter();
+            } else {
+                if (mode == MODE_BLUETOOTH) {
+                    remote_control_exit();
+                    remote_control_set_enabled(0);
+                    mode = MODE_SELF_DRIVING;
+                    self_driving_enter();
+                } else {
+                    self_driving_exit();
+                    mode = MODE_BLUETOOTH;
+                    remote_control_set_enabled(1);
+                    remote_control_enter();
+                }
+            }
+        }
+
+        if (mode == MODE_SELF_DRIVING)
+            self_driving_step();
+        else
+            remote_control_step();
+    }
+}
 
 int main(void) {
     cy_rslt_t result = cybsp_init();
@@ -25,45 +82,12 @@ int main(void) {
     printf("\033[2J\033[H");
     printf("Car App\n\r");
 
-    ultrasonic_init();
-    motor_init();
-    button_init();
-    imu_init();
-    speed_init();
+    remote_control_init_ble();
 
-    cyhal_system_delay_ms(200);
-    motor_stop();
+    xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
 
-    printf("Bluetooth mode ready (default). Press SW2 to switch to self driving mode.\n\r");
+    vTaskStartScheduler();
+    CY_ASSERT(0);
 
-    typedef enum {
-        MODE_BLUETOOTH = 0,
-        MODE_SELF_DRIVING
-    } app_mode_t;
-
-    app_mode_t mode = MODE_BLUETOOTH;
-    remote_control_enter();
-
-    while(1) {
-        if (button_pressed()) {
-            if (mode == MODE_SELF_DRIVING && self_driving_is_halted()) {
-                self_driving_enter();
-            } else {
-                if (mode == MODE_BLUETOOTH) {
-                    remote_control_exit();
-                    mode = MODE_SELF_DRIVING;
-                    self_driving_enter();
-                } else {
-                    self_driving_exit();
-                    mode = MODE_BLUETOOTH;
-                    remote_control_enter();
-                }
-            }
-        }
-
-        if (mode == MODE_SELF_DRIVING)
-            self_driving_step();
-        else
-            remote_control_step();
-    }
+    while(1) {}
 }

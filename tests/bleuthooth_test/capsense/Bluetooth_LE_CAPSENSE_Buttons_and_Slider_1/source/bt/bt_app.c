@@ -246,10 +246,20 @@ wiced_result_t bt_app_management_cb(wiced_bt_management_evt_t event,
 
         case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
 
-            /* Advertisement State Changed */
-            printf("Bluetooth advertisement state change: 0x%x\r\n",
-                                     p_event_data->ble_advert_state_changed);
-            break;
+		    printf("Bluetooth advertisement state change: 0x%x\r\n",
+		                                     p_event_data->ble_advert_state_changed);
+		
+		    /* If advertising stopped → restart it */
+		    if(p_event_data->ble_advert_state_changed == BTM_BLE_ADVERT_OFF)
+		    {
+		        printf("Restarting advertising...\r\n");
+		
+		        wiced_bt_start_advertisements(
+		            BTM_BLE_ADVERT_UNDIRECTED_HIGH,
+		            0,
+		            NULL);
+		    }
+		    break;
 
         case BTM_BLE_CONNECTION_PARAM_UPDATE:
             printf("Bluetooth connection parameter update status:%d\r\n"

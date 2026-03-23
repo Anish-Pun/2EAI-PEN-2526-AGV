@@ -3,8 +3,8 @@
 
 #include "cyhal.h"
 
-extern uint32_t Count_EncoderRight;
-extern uint32_t Count_EncoderLeft;
+extern volatile uint32_t Count_EncoderRight;
+extern volatile uint32_t Count_EncoderLeft;
 
 void speed_init(void);
 float get_speed_right_kmh(void);

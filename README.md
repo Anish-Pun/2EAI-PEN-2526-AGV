@@ -1,7 +1,7 @@
 # AGV_RCCar
 
 
-# Overzicht
+![Overzicht](./docs/images/RC_Car.gif)
 
 
 ## Beschrijving
@@ -25,10 +25,9 @@ Volg eventueel verdere aanwijzingen die in de terminal worden weergegeven of op 
 
 ## Materialen en methodes
 
-- **Hardware**: [KiCAD PCB ontwerp, componenten...]
-- **Firmware**: [ModusToolbox, PSoC6, C]
-- **PLC**: [TwinCAT, Structured Text]
-- **Software**: [Python, dashboard/AI tools]
+- **Hardware**: MD22, ...
+- **Firmware**: ModusToolbox, PSoC6, Arduino, ESP32
+- **Software**: C
 - **Methodologie**: korte beschrijving van de werkwijze.
 
 _Zie de README in elke map voor details!_
@@ -69,8 +68,6 @@ Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de 
 - [ ] Hardware ontwerp klaar
 - [ ] PCB geproduceerd
 - [ ] Firmware basis werkt
-- [ ] PLC programma werkt
-- [ ] Dashboard/software werkt
 
 **Komende stappen**
 

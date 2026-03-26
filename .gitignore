@@ -1,3 +1,5 @@
 firmware/README.md
 tests/bleuthooth_test/Bluetooth_LE_Hello_Sensor/README.md
 firmware/AutoKit/CarApp/README.md
+.project
+.settings/

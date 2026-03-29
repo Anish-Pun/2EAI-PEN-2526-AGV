@@ -29,7 +29,7 @@ extern bool Motion_Detected;
 extern int16_t calib_ax, calib_ay, calib_az;
 extern int16_t calib_gx, calib_gy, calib_gz;
 
-void InitI2C(void);
+cy_rslt_t InitI2C(void);
 void mpu6050_enable_interrupts(void);
 void imu_init(void);
 

@@ -63,7 +63,6 @@ volatile int uxTopUsedPriority;
 
 /* FreeRTOS task handle for button task. Button task is used to start advertisment
  * or enable/disable notification from peer */
-TaskHandle_t  button_task_handle;
 
 /******************************************************************************
  *                          Function Definitions
@@ -120,15 +119,7 @@ int main()
         CY_ASSERT(0);
     }
 
-    /* Create Button Task for processing button presses */
-     rtos_result = xTaskCreate(button_task,"button_task", BUTTON_TASK_STACK_SIZE,
-                               NULL, BUTTON_TASK_PRIORITY, &button_task_handle);
-    if( pdPASS != rtos_result)
-    {
-        printf("Failed to create Button task! \n");
-        CY_ASSERT(0);
-    }
-
+    
     /* Start the FreeRTOS scheduler */
     vTaskStartScheduler();
 

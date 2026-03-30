@@ -7,7 +7,66 @@
 #include "button.h"
 #include "imu.h"
 #include "speed.h"
+#include "self_driving.h"
+#include "remote_control.h"
+#include <FreeRTOS.h>
+#include <task.h>
 #include <stdio.h>
+
+#define APP_TASK_STACK_SIZE    (4096u)
+#define APP_TASK_PRIORITY      (5u)
+
+static void app_task(void *arg)
+{
+    (void)arg;
+
+    ultrasonic_init();
+    motor_init();
+    button_init();
+    imu_init();
+    speed_init();
+
+    cyhal_system_delay_ms(200);
+    motor_stop();
+
+    printf("Bluetooth mode ready (default). Press SW2 to switch to self driving mode.\n\r");
+
+    remote_control_set_enabled(1);
+    remote_control_enter();
+
+    typedef enum {
+        MODE_BLUETOOTH = 0,
+        MODE_SELF_DRIVING
+    } app_mode_t;
+
+    app_mode_t mode = MODE_BLUETOOTH;
+
+    while (1)
+    {
+        if (button_pressed()) {
+            if (mode == MODE_SELF_DRIVING && self_driving_is_halted()) {
+                self_driving_enter();
+            } else {
+                if (mode == MODE_BLUETOOTH) {
+                    remote_control_exit();
+                    remote_control_set_enabled(0);
+                    mode = MODE_SELF_DRIVING;
+                    self_driving_enter();
+                } else {
+                    self_driving_exit();
+                    mode = MODE_BLUETOOTH;
+                    remote_control_set_enabled(1);
+                    remote_control_enter();
+                }
+            }
+        }
+
+        if (mode == MODE_SELF_DRIVING)
+            self_driving_step();
+        else
+            remote_control_step();
+    }
+}
 
 int main(void) {
     cy_rslt_t result = cybsp_init();
@@ -22,91 +81,13 @@ int main(void) {
 
     printf("\033[2J\033[H");
     printf("Car App\n\r");
-    printf("<20cm = STOP\n\r");
 
-    ultrasonic_init();
-    motor_init();
-    button_init();
-    imu_init();
-    speed_init();
+    remote_control_init_ble();
 
-    cyhal_system_delay_ms(1000);
-    motor_stop();
-    printf("Test OK. Press SW2!\n\r");
+    xTaskCreate(app_task, "App Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
 
-    bool car_running = false;
+    vTaskStartScheduler();
+    CY_ASSERT(0);
 
-    while(1) {
-        if (button_pressed()) {
-            car_running = !car_running;
-            Motion_Detected = false;
-            reset_encoders();
-            if (car_running)
-            {
-                printf("\n\rSTART\n\r");
-                motor_forward(65);
-            } else {
-                motor_stop();
-                printf("\n\rSTOPPED\n\r");
-            }
-        }
-
-        if (Motion_Detected) {
-            motor_stop();
-            printf("\n\rEMERGENCY LIFT STOP - Press SW2!\n\r");
-            car_running = false;
-            Motion_Detected = false;
-        }
-
-        if (car_running)
-        {
-            int16_t ax, ay, az, gx, gy, gz;
-            imu_read_all(&ax, &ay, &az, &gx, &gy, &gz);
-
-            float right = get_distance_right_cm();
-            float left  = get_distance_left_cm();
-
-            // Speed prints
-            float spd_r = get_speed_right_kmh();
-            float spd_l = get_speed_left_kmh();
-
-            printf("R:%5.1f L:%5.1f SPD_R:%.1f SPD_L:%.1f AX:%6d AY:%6d AZ:%6d Mot:%d\r",
-                   right, left, spd_r, spd_l, ax, ay, az, (int)Motion_Detected);
-
-            // Lift detect
-            if (az < 8000 || Motion_Detected)
-            {
-                motor_stop();
-                printf("\n\rLIFT DETECTED - STOP\n\r");
-                car_running = false;
-                Motion_Detected = false;
-            }
-            else
-            {
-                // Ultrasonic logic
-                if (right < 20.0f && left < 20.0f)
-                {
-                    motor_stop();
-                    printf("\n\rBOTH OBSTACLES - STOP\n\r");
-                    car_running = false;
-                }
-                // Right < 20cm => turn left
-                else if (right < 20.0f)
-                {
-                    motor_turn_left(80);
-                }
-                // Left < 20cm => turn right
-                else if (left < 20.0f)
-                {
-                    motor_turn_right(80);
-                }
-                // Clear => forward
-                else
-                {
-                    motor_forward(65);
-                }
-            }
-            cyhal_system_delay_ms(50);
-        }
-    }
+    while(1) {}
 }

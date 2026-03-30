@@ -7,6 +7,8 @@ firmware/AutoKit/CarApp/README.md
 .ninja_log
 .mtb-prefs.json
 project-creator.log
+.project
+.settings/
 
 # IDE files
 .clangd

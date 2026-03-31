@@ -5,6 +5,8 @@
 #include "cycfg_pins.h"
 #include "cy_retarget_io.h"
 #include "joycon_classic.h"
+#include "joycon_status_led.h"
+#include "motor.h"
 #include <FreeRTOS.h>
 #include <task.h>
 #include <stdio.h>
@@ -32,11 +34,17 @@ static void app_task(void *arg)
 {
     (void)arg;
 
+    motor_init();
+    motor_stop();
+    joycon_status_led_init();
+    joycon_status_led_set_connecting();
+
     joycon_classic_init();
 
     for (;;)
     {
         joycon_classic_process();
+        joycon_status_led_process();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

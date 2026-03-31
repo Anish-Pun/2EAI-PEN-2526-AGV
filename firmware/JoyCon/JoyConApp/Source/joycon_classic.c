@@ -1,6 +1,8 @@
 #include "joycon_classic.h"
 
 #include "app_bt_utils.h"
+#include "joycon_drive_logic.h"
+#include "joycon_status_led.h"
 #include "cybsp_bt_config.h"
 #include "cybt_platform_config.h"
 
@@ -1025,6 +1027,8 @@ static void app_l2cap_disconnect_ind_cb(uint16_t local_cid, uint16_t reason, wic
         input_only_mode = WICED_FALSE;
         init_sent = WICED_FALSE;
         input_state_valid = WICED_FALSE;
+        joycon_drive_logic_reset();
+        joycon_status_led_set_connecting();
 
         if ((control_cid_pending == 0) && (interrupt_cid_pending == 0) && joycon_bda_valid)
         {
@@ -1067,6 +1071,8 @@ static void app_l2cap_disconnect_cfm_cb(uint16_t local_cid, uint16_t result)
         input_only_mode = WICED_FALSE;
         init_sent = WICED_FALSE;
         input_state_valid = WICED_FALSE;
+        joycon_drive_logic_reset();
+        joycon_status_led_set_connecting();
 
         if ((control_cid_pending == 0) && (interrupt_cid_pending == 0) && joycon_bda_valid)
         {
@@ -1105,6 +1111,13 @@ static void app_l2cap_data_ind_cb(uint16_t local_cid, tDRB *p_drb)
 
             if (changed)
             {
+                joycon_status_led_set_input_ready();
+
+                if ((input_state_valid == WICED_FALSE) || (hat != last_hat))
+                {
+                    joycon_drive_logic_handle_hat(hat);
+                }
+
                 uint8_t diff0 = (uint8_t)(btn0 ^ last_btn0);
                 uint8_t diff1 = (uint8_t)(btn1 ^ last_btn1);
 

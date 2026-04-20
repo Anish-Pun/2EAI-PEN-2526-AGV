@@ -19,11 +19,11 @@ void joycon_drive_logic_handle_hat(uint8_t hat)
     }
     else if ((hat_value == 0x06u) || (hat_value == 0x07u))
     {
-        motor_turn_left(JOYCON_DRIVE_PWM);
+        motor_turn_right(JOYCON_DRIVE_PWM);
     }
     else if ((hat_value == 0x02u) || (hat_value == 0x01u))
     {
-        motor_turn_right(JOYCON_DRIVE_PWM);
+        motor_turn_left(JOYCON_DRIVE_PWM);
     }
     else
     {

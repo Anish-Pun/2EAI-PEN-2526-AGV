@@ -26,6 +26,7 @@
 
 #define EIR_TYPE_COMPLETE_NAME      (0x09u)
 #define EIR_TYPE_SHORT_NAME         (0x08u)
+#define JOYCON_KEEPALIVE_TICKS      (100u)
 
 extern const cybt_platform_config_t cybsp_bt_platform_cfg;
 
@@ -87,6 +88,7 @@ static uint8_t last_lx = 0;
 static uint8_t last_ly = 0;
 static uint8_t last_rx = 0;
 static uint8_t last_ry = 0;
+static uint16_t keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
 
 static uint8_t sdp_db_raw[JOYCON_SDP_DB_SIZE] = {0};
 static wiced_bt_sdp_discovery_db_t *sdp_db = (wiced_bt_sdp_discovery_db_t *)sdp_db_raw;
@@ -278,6 +280,24 @@ void joycon_classic_process(void)
     if (bt_enabled && inquiry_requested && (inquiry_retry_ticks == 0))
     {
         app_start_inquiry();
+    }
+
+    if ((control_cid != 0) && (interrupt_cid != 0) && (init_sent == WICED_TRUE))
+    {
+        if (keepalive_ticks > 0)
+        {
+            keepalive_ticks--;
+        }
+
+        if (keepalive_ticks == 0)
+        {
+            app_send_subcommand_03();
+            keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
+        }
+    }
+    else
+    {
+        keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
     }
 }
 
@@ -977,6 +997,7 @@ static void app_try_send_enable_reports(void)
         app_send_subcommand_03();
         init_sent = WICED_TRUE;
         input_only_mode = WICED_TRUE;
+        keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
     }
 }
 
@@ -1027,6 +1048,7 @@ static void app_l2cap_disconnect_ind_cb(uint16_t local_cid, uint16_t reason, wic
         input_only_mode = WICED_FALSE;
         init_sent = WICED_FALSE;
         input_state_valid = WICED_FALSE;
+        keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
         joycon_drive_logic_reset();
         joycon_status_led_set_connecting();
 
@@ -1071,6 +1093,7 @@ static void app_l2cap_disconnect_cfm_cb(uint16_t local_cid, uint16_t result)
         input_only_mode = WICED_FALSE;
         init_sent = WICED_FALSE;
         input_state_valid = WICED_FALSE;
+        keepalive_ticks = JOYCON_KEEPALIVE_TICKS;
         joycon_drive_logic_reset();
         joycon_status_led_set_connecting();
 

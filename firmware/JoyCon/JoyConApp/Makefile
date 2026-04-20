@@ -40,7 +40,7 @@ MTB_TYPE=COMBINED
 # To change the target, it is recommended to use the Library manager
 # ('make library-manager' from command line), which will also update Eclipse IDE launch
 # configurations.
-TARGET=APP_CY8CPROTO-062-4343W
+TARGET=APP_CY8CKIT-062-WIFI-BT
 
 # Name of application (used to derive name of final linked file).
 #
@@ -101,7 +101,7 @@ SOURCES=
 INCLUDES=
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES=COMPONENT_WICED_DUALMODE CYBSP_BT_PLATFORM_CFG_MEM_POOL_BYTES=12288
+DEFINES=
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

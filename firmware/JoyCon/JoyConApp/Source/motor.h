@@ -11,5 +11,7 @@ void motor_turn_right(uint8_t speed);
 
 extern cyhal_pwm_t pwm_a;
 extern cyhal_pwm_t pwm_b;
+extern cyhal_pwm_t pwm_c;
+extern cyhal_pwm_t pwm_d;
 
 #endif

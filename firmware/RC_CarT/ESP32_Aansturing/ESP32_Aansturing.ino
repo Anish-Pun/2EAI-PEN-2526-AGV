@@ -1,69 +1,67 @@
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+// ================= CONFIG =================
+#define motor1Pin 26
+#define motor2Pin 27
 
-BLEServer* pServer = nullptr;
-BLECharacteristic* pCharacteristic = nullptr;
+// ESP32 PWM (LEDC)
+#define CH1 0
+#define CH2 1
 
-#define SERVICE_UUID        "12345678-1234-5678-1234-56789abcdef0"
-#define CHARACTERISTIC_UUID "abcdef01-1234-5678-1234-56789abcdef0"
-
-// Callback: alles printen wat client stuurt
-class EchoCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic* pChar) override {
-    String value = pChar->getValue().c_str();
-    value.trim(); // whitespace verwijderen
-
-    Serial.print("Ontvangen: ");
-    for (unsigned int i = 0; i < value.length(); i++) {
-      Serial.print(value[i]);
-    }
-    Serial.println();
-  }
-};
-
-// Server connect / disconnect callbacks
-class ServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) override {
-    Serial.println("Client verbonden (MAC niet beschikbaar in deze library)");
-  }
-
-  void onDisconnect(BLEServer* pServer) override {
-    Serial.println("Client losgekoppeld");
-    BLEDevice::startAdvertising(); // opnieuw adverteren
-  }
-};
-
+// ================= SETUP =================
 void setup() {
   Serial.begin(115200);
 
-  BLEDevice::init("ESP32_BLE_ECHO_SERVER");
-  Serial.print("ESP32 BLE MAC Address: ");
-  Serial.println(BLEDevice::getAddress().toString().c_str());
+  ledcSetup(CH1, 1000, 8);
+  ledcAttachPin(motor1Pin, CH1);
 
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new ServerCallbacks());
+  ledcSetup(CH2, 1000, 8);
+  ledcAttachPin(motor2Pin, CH2);
 
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  pCharacteristic = pService->createCharacteristic(
-    CHARACTERISTIC_UUID,
-    BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY
-  );
-
-  pCharacteristic->setCallbacks(new EchoCallbacks());
-  pCharacteristic->addDescriptor(new BLE2902());
-
-  pService->start();
-
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->start();
-
-  Serial.println("BLE advertising gestart");
+  // STOP
+  ledcWrite(CH1, 128);
+  ledcWrite(CH2, 128);
 }
 
+// ================= FUNCTIES =================
+void vooruit() {
+  ledcWrite(CH1, 200);
+  ledcWrite(CH2, 200);
+}
+
+void achteruit() {
+  ledcWrite(CH1, 50);
+  ledcWrite(CH2, 50);
+}
+
+void rechts() {
+  ledcWrite(CH1, 200);
+  ledcWrite(CH2, 50);
+}
+
+void links() {
+  ledcWrite(CH1, 50);
+  ledcWrite(CH2, 200);
+}
+
+void stopMotors() {
+  ledcWrite(CH1, 128);
+  ledcWrite(CH2, 128);
+}
+
+// ================= LOOP =================
 void loop() {
-  delay(1000);
+
+  vooruit();
+  delay(2000);
+
+  achteruit();
+  delay(2000);
+
+  rechts();
+  delay(2000);
+
+  links();
+  delay(2000);
+
+  stopMotors();
+  delay(2000);
 }

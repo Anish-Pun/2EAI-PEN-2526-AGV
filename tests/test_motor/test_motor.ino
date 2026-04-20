@@ -1,47 +1,67 @@
-// MD22 Analog + Turn Mode Test via PWM
-const int motor1Pin = 9;  // Motor links
-const int motor2Pin = 10; // Motor rechts
+// ================= CONFIG =================
+#define motor1Pin 5
+#define motor2Pin 6
 
-int stopSpeed = 128;
-int forwardSpeed = 191;   // ~50% vooruit
-int reverseSpeed = 64;    // ~50% achteruit
-
+// ================= SETUP =================
 void setup() {
+  Serial.begin(115200);
+
   pinMode(motor1Pin, OUTPUT);
   pinMode(motor2Pin, OUTPUT);
-  Serial.begin(9600);
-  Serial.println("MD22 beweging test start");
+
+  // STOP bij start
+  analogWrite(motor1Pin, 128);
+  analogWrite(motor2Pin, 128);
+
+  Serial.println("MD22 Uno PWM ready");
 }
 
+// ================= FUNCTIES =================
+void vooruit() {
+  analogWrite(motor1Pin, 200); // vooruit snelheid ~50%
+  analogWrite(motor2Pin, 200);
+}
+
+void achteruit() {
+  analogWrite(motor1Pin, 50);  // achteruit snelheid ~50%
+  analogWrite(motor2Pin, 50);
+}
+
+void rechts() {
+  analogWrite(motor1Pin, 200); // links vooruit
+  analogWrite(motor2Pin, 50);  // rechts achteruit
+}
+
+void links() {
+  analogWrite(motor1Pin, 50);  // links achteruit
+  analogWrite(motor2Pin, 200); // rechts vooruit
+}
+
+void stopMotors() {
+  analogWrite(motor1Pin, 128); // stop
+  analogWrite(motor2Pin, 128);
+}
+
+// ================= LOOP =================
 void loop() {
 
-  // Vooruita
-  Serial.println("Vooruit");
-  analogWrite(motor1Pin, forwardSpeed);
-  analogWrite(motor2Pin, forwardSpeed);
+  // VOORUIT
+  vooruit();
   delay(2000);
 
-  // Achteruit
-  Serial.println("Achteruit");
-  analogWrite(motor1Pin, reverseSpeed);
-  analogWrite(motor2Pin, reverseSpeed);
+  // ACHTERUIT
+  achteruit();
   delay(2000);
 
-  // Links draaien
-  Serial.println("Links draaien");
-  analogWrite(motor1Pin, reverseSpeed); // linker wiel achteruit
-  analogWrite(motor2Pin, forwardSpeed); // rechter wiel vooruit
+  // RECHTS draaien
+  rechts();
   delay(2000);
 
-  // Rechts draaien
-  Serial.println("Rechts draaien");
-  analogWrite(motor1Pin, forwardSpeed); // linker wiel vooruit
-  analogWrite(motor2Pin, reverseSpeed); // rechter wiel achteruit
+  // LINKS draaien
+  links();
   delay(2000);
 
-  // Stop
-  Serial.println("Stop");
-  analogWrite(motor1Pin, stopSpeed);
-  analogWrite(motor2Pin, stopSpeed);
+  // STOP
+  stopMotors();
   delay(2000);
 }

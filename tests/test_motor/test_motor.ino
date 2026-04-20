@@ -15,7 +15,7 @@ void setup() {
 
 void loop() {
 
-  // Vooruit
+  // Vooruita
   Serial.println("Vooruit");
   analogWrite(motor1Pin, forwardSpeed);
   analogWrite(motor2Pin, forwardSpeed);

@@ -14,5 +14,10 @@ bool button_pressed(void) {
     bool curr = !cyhal_gpio_read(CAR_START_STOP_PIN);
     press_edge = curr && !last_state;
     last_state = curr;
+
+    if (press_edge)
+    {
+        cyhal_system_delay_ms(200);
+    }
     return press_edge;
 }

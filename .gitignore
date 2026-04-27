@@ -19,3 +19,5 @@ mtb_shared/
 # logs
 *.log
 /.metadata/
+.project
+.settings/

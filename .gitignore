@@ -18,3 +18,4 @@ mtb_shared/
 
 # logs
 *.log
+/.metadata/

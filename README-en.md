@@ -44,7 +44,8 @@ Detailed documentation can be found in the [docs](./docs/) folder:
 
 - [Design Document](./docs/design.md)
 - [User Manual](./docs/user-manual.md)
-
+- [Bluetooth Explained](./docs/Bluetooth_explained.md)
+- [Bluetooth Protocol](./docs/Bluetooth_protocol.md)
 
 
 ## Results

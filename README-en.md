@@ -1,9 +1,9 @@
-# [Project Name]
+# RC_Car
 
-> **⚠️ Change this title to your project name!**
 
-![Overview](./docs/images/Overview.jpg)
-> **⚠️ Replace this image with a photo of your project**
+
+![Overview](./docs/images/RC_Car.gif)
+
 
 ## Description
 

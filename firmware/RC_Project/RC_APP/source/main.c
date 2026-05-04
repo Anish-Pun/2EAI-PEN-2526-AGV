@@ -1,14 +1,10 @@
 #if defined (CY_USING_HAL)
 #include "cyhal.h"
 #endif
+
 #include "cybsp.h"
-#include "cycfg_pins.h"
 #include "cy_retarget_io.h"
-#include "joycon_classic.h"
-#include "joycon_status_led.h"
-#include "motor.h"
-#include <FreeRTOS.h>
-#include <task.h>
+#include "rc_car_logic.h"
 #include <stdio.h>
 
 #if defined(CYBSP_DEBUG_UART_TX)
@@ -27,28 +23,6 @@
 #define APP_UART_RX (P5_0)
 #endif
 
-#define APP_TASK_STACK_SIZE    (4096u)
-#define APP_TASK_PRIORITY      (5u)
-
-static void app_task(void *arg)
-{
-    (void)arg;
-
-    motor_init();
-    motor_stop();
-    joycon_status_led_init();
-    joycon_status_led_set_connecting();
-
-    joycon_classic_init();
-
-    for (;;)
-    {
-        joycon_classic_process();
-        joycon_status_led_process();
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
 int main(void)
 {
     cy_rslt_t result;
@@ -56,22 +30,17 @@ int main(void)
 #if defined (CY_DEVICE_SECURE) && defined (CY_USING_HAL)
     cyhal_wdt_t wdt_obj;
 
-    /* Clear watchdog timer so that it doesn't trigger a reset */
     result = cyhal_wdt_init(&wdt_obj, cyhal_wdt_get_max_timeout_ms());
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     cyhal_wdt_free(&wdt_obj);
 #endif
 
-    /* Initialize the device and board peripherals */
     result = cybsp_init();
-
-    /* Board init failed. Stop program execution */
     if (result != CY_RSLT_SUCCESS)
     {
         CY_ASSERT(0);
     }
 
-    /* Enable global interrupts */
     __enable_irq();
 
     result = cy_retarget_io_init(APP_UART_TX, APP_UART_RX, CY_RETARGET_IO_BAUDRATE);
@@ -82,15 +51,33 @@ int main(void)
 
     setvbuf(stdout, NULL, _IONBF, 0);
     printf("\033[2J\033[H");
-    printf("JoyCon Classic host started\r\n");
+    printf("Main started\r\n");
 
-    xTaskCreate(app_task, "JoyCon Task", APP_TASK_STACK_SIZE, NULL, APP_TASK_PRIORITY, NULL);
+#if defined(TARGET_APP_CY8CKIT_062_WIFI_BT) || defined(TARGET_APP_CY8CPROTO_062_4343W)
+    printf("Detected board: CY8CKIT-062-WIFI-BT -> RC CAR\r\n");
+    rc_car_logic_init();
+    rc_car_logic_run();
 
-    vTaskStartScheduler();
+#elif defined(TARGET_CY8CPROTO_062_4343W) || defined(CY8CPROTO_062_4343W)
+    printf("Detected board: CY8CPROTO-062-4343W -> RC CART (not implemented yet)\r\n");
+
+    while (1)
+    {
+    }
+
+#else
+    printf("Unknown board -> no logic assigned yet\r\n");
+
+    while (1)
+    {
+    }
+#endif
 
     CY_ASSERT(0);
 
-    for (;;) {}
+    for (;;)
+    {
+    }
 }
 
 /* [] END OF FILE */

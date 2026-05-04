@@ -11,7 +11,7 @@
 libs/
 
 # Uncomment below line if you don't want to lock the library versions for your application
-assetlocks.json
+# assetlocks.json
 
 # ModusToolbox Configurator generated code and lock file
 GeneratedSource/
@@ -92,7 +92,7 @@ Backup*
 
 # Trash files
 *.bak
-.ninja_log
+
 
 # Keil uVision files
 
@@ -147,4 +147,3 @@ Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
 [Dd]esktop.ini
-mtb_shared

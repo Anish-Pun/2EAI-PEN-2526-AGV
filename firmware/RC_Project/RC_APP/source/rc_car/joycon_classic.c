@@ -1,6 +1,7 @@
 #include "joycon_classic.h"
 
 #include "app_bt_utils.h"
+#include "rc_car_logic.h"
 #include "joycon_drive_logic.h"
 #include "joycon_status_led.h"
 #include "cybsp_bt_config.h"
@@ -16,6 +17,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
+#define JOYCON_BTN_SELF_MASK    (0x08u)  /* self-driving button */
+#define JOYCON_BTN_MANUAL_MASK  (0x04u)  /* JoyCon/manual mode button */
 
 #define JOYCON_HID_CONTROL_PSM      (0x0011u)
 #define JOYCON_HID_INTERRUPT_PSM    (0x0013u)
@@ -1136,13 +1140,26 @@ static void app_l2cap_data_ind_cb(uint16_t local_cid, tDRB *p_drb)
             {
                 joycon_status_led_set_input_ready();
 
-                if ((input_state_valid == WICED_FALSE) || (hat != last_hat))
+                if (!rc_car_logic_is_self_driving_active())
                 {
-                    joycon_drive_logic_handle_hat(hat);
+                    if ((input_state_valid == WICED_FALSE) || (hat != last_hat))
+                    {
+                        joycon_drive_logic_handle_hat(hat);
+                    }
                 }
 
                 uint8_t diff0 = (uint8_t)(btn0 ^ last_btn0);
                 uint8_t diff1 = (uint8_t)(btn1 ^ last_btn1);
+
+                if (((diff0 & JOYCON_BTN_SELF_MASK) != 0u) && ((btn0 & JOYCON_BTN_SELF_MASK) != 0u))
+                {
+                    rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING);
+                }
+
+                if (((diff0 & JOYCON_BTN_MANUAL_MASK) != 0u) && ((btn0 & JOYCON_BTN_MANUAL_MASK) != 0u))
+                {
+                    rc_car_logic_set_mode(RC_CAR_MODE_BLUETOOTH);
+                }
 
                 force_log_output = WICED_TRUE;
                 printf("IN b0=%02X b1=%02X hat=%s lx=%3u ly=%3u rx=%3u ry=%3u",

@@ -7,6 +7,8 @@
 
 #include "cyhal.h"
 #include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 static bool halted_until_restart = false;
 static bool halt_message_printed = false;
@@ -59,15 +61,15 @@ void self_driving_step(void)
     float spd_r = get_speed_right_kmh();
     float spd_l = get_speed_left_kmh();
 
-        char status_line[200];
-        (void)snprintf(status_line, sizeof(status_line),
-                  "R:%5.1f L:%5.1f SPD_R:%.1f SPD_L:%.1f CR:%lu CL:%lu AX:%6d AY:%6d AZ:%6d Mot:%d",
-                  right, left, spd_r, spd_l,
-                  (unsigned long)Count_EncoderRight, (unsigned long)Count_EncoderLeft,
-                  ax, ay, az, (int)Motion_Detected);
+    char status_line[200];
+    (void)snprintf(status_line, sizeof(status_line),
+                   "R:%5.1f L:%5.1f SPD_R:%.1f SPD_L:%.1f CR:%lu CL:%lu AX:%6d AY:%6d AZ:%6d Mot:%d",
+                   right, left, spd_r, spd_l,
+                   (unsigned long)Count_EncoderRight, (unsigned long)Count_EncoderLeft,
+                   ax, ay, az, (int)Motion_Detected);
 
-        printf("\r%-160s", status_line);
-        fflush(stdout);
+    printf("\r%-160s", status_line);
+    fflush(stdout);
 
     if (Motion_Detected)
     {
@@ -84,7 +86,7 @@ void self_driving_step(void)
         return;
     }
 
-    if (right < 20.0f && left < 20.0f)
+    if ((right < 20.0f) && (left < 20.0f))
     {
         motor_stop();
         halted_until_restart = true;

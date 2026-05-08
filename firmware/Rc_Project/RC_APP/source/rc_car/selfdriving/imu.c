@@ -87,7 +87,7 @@ cy_rslt_t InitI2C(void)
 void mpu6050_enable_interrupts(void)
 {
     uint8_t buffer[2];
-    uint8_t motion_threshold = 50;
+    uint8_t motion_threshold = 100;
 
     // Reset signal paths
     buffer[0] = 0x68; buffer[1] = 0x07;

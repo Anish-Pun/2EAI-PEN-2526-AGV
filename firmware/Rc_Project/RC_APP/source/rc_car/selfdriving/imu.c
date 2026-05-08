@@ -12,9 +12,8 @@ int16_t calib_gx = 480,  calib_gy = 170,  calib_gz = 210;
 // ISR function (called on motion interrupt)
 void ISR_mpu6050(void *callback_arg, cyhal_gpio_event_t event)
 {
-    motor_stop();
+    // motor_stop();       /* disabled: triggers falsely on startup */
     Motion_Detected = true;
-    // printf("IMU LIFT DETECTED - EMERGENCY STOP\n\r");
 }
 
 static cyhal_gpio_callback_data_t MPU6050_cb_data =

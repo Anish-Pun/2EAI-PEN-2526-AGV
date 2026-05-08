@@ -4,6 +4,7 @@
 #include "rc_car_logic.h"
 #include "joycon_drive_logic.h"
 #include "joycon_status_led.h"
+#include "self_driving.h"
 #include "cybsp_bt_config.h"
 #include "cybt_platform_config.h"
 
@@ -20,6 +21,7 @@
 
 #define JOYCON_BTN_SELF_MASK    (0x08u)  /* self-driving button */
 #define JOYCON_BTN_MANUAL_MASK  (0x04u)  /* JoyCon/manual mode button */
+#define JOYCON_BTN_X_MASK       (0x02u)  /* X button in btn0 = 0x02 */
 
 #define JOYCON_HID_CONTROL_PSM      (0x0011u)
 #define JOYCON_HID_INTERRUPT_PSM    (0x0013u)
@@ -1159,6 +1161,15 @@ static void app_l2cap_data_ind_cb(uint16_t local_cid, tDRB *p_drb)
                 if (((diff0 & JOYCON_BTN_MANUAL_MASK) != 0u) && ((btn0 & JOYCON_BTN_MANUAL_MASK) != 0u))
                 {
                     rc_car_logic_set_mode(RC_CAR_MODE_BLUETOOTH);
+                }
+
+                /* X button (btn0 = 0x02) — restart self-driving if car is halted */
+                if (((diff0 & JOYCON_BTN_X_MASK) != 0u) && ((btn0 & JOYCON_BTN_X_MASK) != 0u))
+                {
+                    if (rc_car_logic_is_self_driving_active() && self_driving_is_halted())
+                    {
+                        self_driving_enter();
+                    }
                 }
 
                 force_log_output = WICED_TRUE;

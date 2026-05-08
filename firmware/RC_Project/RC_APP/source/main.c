@@ -66,7 +66,7 @@ int main(void)
     }
 
 #else
-    printf("Unknown board -> no logic assigned yet\r\n");
+    printf("Unknown board\r\n");
 
     while (1)
     {

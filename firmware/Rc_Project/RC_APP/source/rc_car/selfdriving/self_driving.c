@@ -13,6 +13,9 @@
 static bool halted_until_restart = false;
 static bool halt_message_printed = false;
 
+/* Last event message shown on line 2 of the terminal output */
+static char event_line[160] = "Event: --";
+
 bool self_driving_is_halted(void)
 {
     return halted_until_restart;
@@ -26,7 +29,12 @@ void self_driving_enter(void)
     halted_until_restart = false;
     halt_message_printed = false;
 
-    printf("\n\rSELF-DRIVING MODE\n\r");
+    snprintf(event_line, sizeof(event_line), "Event: SELF-DRIVING MODE entered");
+    printf("\033[2J\033[H");   /* clear screen, cursor home */
+    printf("[ Self-driving status ]\n\r");
+    printf("%-160s\n\r", "Sensors: --");
+    printf("%-160s\n\r", event_line);
+    fflush(stdout);
     motor_forward(65);
 }
 
@@ -36,6 +44,7 @@ void self_driving_exit(void)
     halted_until_restart = false;
     halt_message_printed = false;
     printf("\n\rEXIT SELF-DRIVING\n\r");
+    fflush(stdout);
 }
 
 void self_driving_step(void)
@@ -45,7 +54,9 @@ void self_driving_step(void)
         motor_stop();
         if (!halt_message_printed)
         {
-            printf("\n\rBOTH OBSTACLES - STOPPED. Press SW2 to restart.\n\r");
+            snprintf(event_line, sizeof(event_line), "Event: BOTH OBSTACLES - STOPPED. Switch to BT mode to restart.");
+            printf("\033[3;1H\033[K%-160s", event_line);  /* line 3, overwrite */
+            fflush(stdout);
             halt_message_printed = true;
         }
         cyhal_system_delay_ms(50);
@@ -68,13 +79,17 @@ void self_driving_step(void)
                    (unsigned long)Count_EncoderRight, (unsigned long)Count_EncoderLeft,
                    ax, ay, az, (int)Motion_Detected);
 
-    printf("\r%-160s", status_line);
+    // sensor values
+    printf("\033[2;1H\033[K%-160s", status_line);
+    // last event (overwrite in place)
+    printf("\033[3;1H\033[K%-160s", event_line);
     fflush(stdout);
 
+    /*  IMU lift / motion checks disabled (triggering false positives)
     if (Motion_Detected)
     {
         motor_stop();
-        printf("\n\rEMERGENCY LIFT STOP - Press SW2!\n\r");
+        snprintf(event_line, sizeof(event_line), "Event: EMERGENCY LIFT STOP - switch to BT mode to reset");
         Motion_Detected = false;
         return;
     }
@@ -82,28 +97,33 @@ void self_driving_step(void)
     if (az < 8000)
     {
         motor_stop();
-        printf("\n\rLIFT DETECTED - STOP\n\r");
+        snprintf(event_line, sizeof(event_line), "Event: LIFT DETECTED (az=%d) - STOP", az);
         return;
     }
+     end disabled block */
 
     if ((right < 20.0f) && (left < 20.0f))
     {
         motor_stop();
         halted_until_restart = true;
         halt_message_printed = false;
+        snprintf(event_line, sizeof(event_line), "Event: BOTH OBSTACLES DETECTED - halted");
         return;
     }
     else if (right < 20.0f)
     {
+        snprintf(event_line, sizeof(event_line), "Event: Obstacle RIGHT (%.1f cm) -> turning left", right);
         motor_turn_left(80);
     }
     else if (left < 20.0f)
     {
+        snprintf(event_line, sizeof(event_line), "Event: Obstacle LEFT (%.1f cm) -> turning right", left);
         motor_turn_right(80);
     }
     else
     {
-        motor_forward(65);
+        snprintf(event_line, sizeof(event_line), "Event: Clear path -> forward");
+        motor_forward(100);
     }
 
     cyhal_system_delay_ms(50);

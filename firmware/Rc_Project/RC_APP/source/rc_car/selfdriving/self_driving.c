@@ -102,7 +102,7 @@ void self_driving_step(void)
     }
      end disabled block */
 
-    if ((right < 20.0f) && (left < 20.0f))
+    if ((right < 18.0f) && (left < 18.0f))
     {
         motor_stop();
         halted_until_restart = true;
@@ -110,20 +110,20 @@ void self_driving_step(void)
         snprintf(event_line, sizeof(event_line), "Event: BOTH OBSTACLES DETECTED - halted");
         return;
     }
-    else if (right < 20.0f)
+    else if (right < 25.0f)
     {
         snprintf(event_line, sizeof(event_line), "Event: Obstacle RIGHT (%.1f cm) -> turning left", right);
-        motor_turn_left(80);
+        motor_turn_left(70);
     }
-    else if (left < 20.0f)
+    else if (left < 25.0f)
     {
         snprintf(event_line, sizeof(event_line), "Event: Obstacle LEFT (%.1f cm) -> turning right", left);
-        motor_turn_right(80);
+        motor_turn_right(70);
     }
     else
     {
         snprintf(event_line, sizeof(event_line), "Event: Clear path -> forward");
-        motor_forward(100);
+        motor_forward(80);
     }
 
     cyhal_system_delay_ms(50);

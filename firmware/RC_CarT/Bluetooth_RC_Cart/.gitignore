@@ -56,7 +56,7 @@ openocd.tcl
 
 # IAR Debugger Settings
 # *.ewd
-
+.cache/
 # Comment this out if you use C-Stat or C-Run to compile/analyze your project
 *.ewt
 

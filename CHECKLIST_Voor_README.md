@@ -24,6 +24,6 @@
 - [ ] ...
 # Links toegevoegd
 
-- [X] [Arduino_Code](/firmware/RC_CarT/test_motor/test_motor.ino)
+- [X] Arduino_Code
 - [ ] ModulusToolbox Software [Mini_RC_Car](/firmware/AutoKit/CarApp/)
-- [ ] ModulusToolbox Software [RC_CarT](/firmware/RC_CarT/RC_CarT_Software/)
+- [ ] ModulusToolbox Software 

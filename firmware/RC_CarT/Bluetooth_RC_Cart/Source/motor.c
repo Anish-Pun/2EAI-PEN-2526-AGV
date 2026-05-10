@@ -1,92 +1,164 @@
 #include "motor.h"
 #include "cybsp.h"
-#include "pins.h"
-#include "cy_retarget_io.h"
 #include "cyhal.h"
-
-#include <stdio.h>
 #include <stdint.h>
+#include <math.h>
+#include <stdio.h>
+#include "pins.h"
+/* =========================
+   CONFIG
+========================= */
+
+#define PWM_FREQ 20000
+
+// 🔧 CALIBRATE THESE (MUST)
+#define STOP_LINKS 60.0f
+#define STOP_RECHTS 65.0f
+
+#define DEADZONE 3.0f
 
 cyhal_pwm_t pwm_a;
 cyhal_pwm_t pwm_b;
 
-#define PWM_FREQ 20000   // 20kHz beter dan 1kHz
+/* =========================
+   UTIL
+========================= */
 
-/*
-MD22 Analog mode:
-0%   = full reverse
-50%  = stop
-100% = full forward
-*/
+static float clamp(float v, float min, float max)
+{
+    if (v < min) return min;
+    if (v > max) return max;
+    return v;
+}
 
-static float speed_to_duty_forward(uint8_t speed)
+static float apply_deadzone(float duty, float stop)
+{
+    if (fabs(duty - stop) < DEADZONE)
+        return stop;
+
+    return duty;
+}
+
+static float smooth(float prev, float input)
+{
+    return (prev * 0.8f) + (input * 0.2f);
+}
+
+/* =========================
+   STATE
+========================= */
+
+typedef enum {
+    MOTOR_STOP = 0,
+    MOTOR_FORWARD,
+    MOTOR_BACKWARD
+} motor_state_t;
+
+/* =========================
+   INTERNAL STATE
+========================= */
+
+static float last_a = STOP_LINKS;
+static float last_b = STOP_RECHTS;
+
+/* =========================
+   MAPPING
+========================= */
+
+static float map_motor(float stop, motor_state_t state, uint8_t speed)
 {
     if (speed > 100) speed = 100;
 
-    // 50% -> 100%
-    return 50.0f + ((float)speed * 0.5f);
+    float duty = stop;
+
+    switch (state)
+    {
+        case MOTOR_FORWARD:
+            duty = stop + (speed * 0.45f);
+            break;
+
+        case MOTOR_BACKWARD:
+            duty = stop - (speed * 0.45f);
+            break;
+
+        case MOTOR_STOP:
+        default:
+            duty = stop;
+            break;
+    }
+
+    duty = apply_deadzone(duty, stop);
+    return clamp(duty, 0.0f, 100.0f);
 }
 
-static float speed_to_duty_backward(uint8_t speed)
-{
-    if (speed > 100) speed = 100;
-
-    // 50% -> 0%
-    return 50.0f - ((float)speed * 0.5f);
-}
+/* =========================
+   INIT
+========================= */
 
 void motor_init(void)
 {
-    printf("Motor init (MD22 Analog Mode)\r\n");
+    printf("MD22 analog motor init\r\n");
 
     cyhal_pwm_init(&pwm_a, MOTOR_A_PIN, NULL);
-    cyhal_pwm_set_duty_cycle(&pwm_a, 50.0f, PWM_FREQ); // STOP
-    cyhal_pwm_start(&pwm_a);
-
     cyhal_pwm_init(&pwm_b, MOTOR_B_PIN, NULL);
-    cyhal_pwm_set_duty_cycle(&pwm_b, 50.0f, PWM_FREQ); // STOP
-    cyhal_pwm_start(&pwm_b);
 
-    motor_stop();
+    cyhal_pwm_set_duty_cycle(&pwm_a, STOP_LINKS, PWM_FREQ);
+    cyhal_pwm_set_duty_cycle(&pwm_b, STOP_RECHTS, PWM_FREQ);
+
+    cyhal_pwm_start(&pwm_a);
+    cyhal_pwm_start(&pwm_b);
 }
+
+/* =========================
+   APPLY
+========================= */
+
+static void motor_apply(float a, float b)
+{
+    last_a = smooth(last_a, a);
+    last_b = smooth(last_b, b);
+
+    cyhal_pwm_set_duty_cycle(&pwm_a, last_a, PWM_FREQ);
+    cyhal_pwm_set_duty_cycle(&pwm_b, last_b, PWM_FREQ);
+}
+
+/* =========================
+   PUBLIC API
+========================= */
 
 void motor_stop(void)
 {
-    // 2.5V center stop
-    cyhal_pwm_set_duty_cycle(&pwm_a, 40.0f, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, 60.0f, PWM_FREQ);
+    motor_apply(STOP_LINKS, STOP_RECHTS);
 }
 
 void motor_forward(uint8_t speed)
 {
-    float duty = speed_to_duty_forward(speed);
+    float a = map_motor(STOP_LINKS, MOTOR_FORWARD, speed);
+    float b = map_motor(STOP_RECHTS, MOTOR_FORWARD, speed);
 
-    cyhal_pwm_set_duty_cycle(&pwm_a, duty, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, duty, PWM_FREQ);
+    motor_apply(a, b);
 }
 
 void motor_backward(uint8_t speed)
 {
-    float duty = speed_to_duty_backward(speed);
+    float a = map_motor(STOP_LINKS, MOTOR_BACKWARD, speed);
+    float b = map_motor(STOP_RECHTS, MOTOR_BACKWARD, speed);
 
-    cyhal_pwm_set_duty_cycle(&pwm_a, duty, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, duty, PWM_FREQ);
+    motor_apply(a, b);
 }
 
 void motor_turn_left(uint8_t speed)
 {
-    float fast = speed_to_duty_forward(speed);
+    float a = STOP_LINKS;
+    float b = map_motor(STOP_RECHTS, MOTOR_FORWARD, speed);
 
-    // linker motor stop, rechter motor vooruit
-    cyhal_pwm_set_duty_cycle(&pwm_a, 50.0f, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, fast, PWM_FREQ);
+    motor_apply(a, b);
 }
 
 void motor_turn_right(uint8_t speed)
 {
-    float fast = speed_to_duty_forward(speed);
+    float a = map_motor(STOP_LINKS, MOTOR_FORWARD, speed);
+    float b = STOP_RECHTS;
 
-    // rechter motor stop, linker motor vooruit
-    cyhal_pwm_set_duty_cycle(&pwm_a, fast, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, 50.0f, PWM_FREQ);
+    motor_apply(a, b);
 }

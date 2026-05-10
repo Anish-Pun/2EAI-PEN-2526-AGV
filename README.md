@@ -1,88 +1,77 @@
-# AGV_RCCar
-
+# AGV_RCCar 🏎️
 
 ![Overzicht](./docs/images/RC_Car.gif)
 
+## 📖 Beschrijving
 
-## Beschrijving
+Het **AGV** project is een geavanceerd embedded systeem dat een RC-car transformeert in een autonoom geleid voertuig. Het systeem is ontworpen voor dual-mode operatie:
+- **Manuele Modus:** Real-time besturing via een draadloze Bluetooth-verbinding.
+- **Autonome Modus:** Zelfstandige navigatie middels line-tracking en actieve obstakelvermijding via ultrasone sensoren.
 
-Ons project bestaat uit het ontwikkelen van een RC-car die zowel manueel als autonoom kan worden bestuurd. In de manuele modus wordt de wagen aangestuurd via een Bluetooth-verbinding, terwijl hij in de autonome modus gebruikmaakt van een ultrasone sensor en een line tracker om zelfstandig te rijden en obstakels te vermijden.
-Het doel van dit project is om praktijkervaring op te doen met embedded systemen, sensoren en draadloze communicatie. Wat het project bijzonder maakt, is de combinatie van real-time besturing en autonome besluitvorming binnen één geïntegreerd systeem.
+De kernwaarde van dit project ligt in de ontwikkeling van een **cross-platform firmware-architectuur**. Hierdoor kunnen verschillende types hardware-onderstellen aangestuurd worden met een uniforme logische basis, wat zorgt voor herbruikbaarheid en schaalbaarheid.
 
-### Sequence of operation
+## ⚙️ Technische Stack
 
-Beschrijf kort wat je verwacht nadat alle hardware en software zijn opgezet volgens de stappen onder **Getting Started**. Deze sectie dient als handleiding voor niet-technische gebruikers.
+| Component | Technologie |
+|:--- |:--- |
+| **Microcontrollers** | PSoC6, ESP32, Arduino |
+| **Motor Drivers** | MD22, Sabertooth 2x32A |
+| **Ontwikkelomgeving** | ModusToolbox™ (Infineon) |
+| **Programmeertaal** | C (Embedded) |
+| **Sensoren** | Ultrasonic (HC-SR04), Line Tracking Array |
 
-1. Verbind het bord met de computer via USB.
-2. De groene LED schakelt automatisch in om aan te geven dat het systeem actief is.
-3. In de seriële terminal verschijnt een welkomstbericht.
-4. De lineaire slider voert een automatische kalibratie uit en beweegt zichzelf naar het midden.
-5. Wacht tot een piepsignaal klinkt en plaats daarna de telefoon op de houder van de slider.
+---
 
-Volg eventueel verdere aanwijzingen die in de terminal worden weergegeven of op de interface te zien zijn.
+## 🚀 Sequence of Operation
 
+Volg deze stappen om het systeem operationeel te maken nadat de hardware is geassembleerd:
 
-
-## Materialen en methodes
-
-- **Hardware**: MD22, ...
-- **Firmware**: ModusToolbox, PSoC6, Arduino, ESP32
-- **Software**: C
-- **Methodologie**: korte beschrijving van de werkwijze.
-
-_Zie de README in elke map voor details!_
-
-
-
-## Documentatie
-
-Gedetailleerde documentatie is te vinden in de [docs](./docs/) folder:
-
-- [Design Document](./docs/design.md)
-
-- [User Manual](./docs/user-manual.md)
-
-  
-
-## Resultaten
-
-- Korte samenvatting van de belangrijkste bevindingen.
-- Eventuele grafieken, tabellen of afbeeldingen.
-- Reflectie op prestaties of betrouwbaarheid.
+1. **Power-up:** Verbind het bord via USB met een host-computer of voed de batterij.
+2. **Systeemstatus:** De groene LED licht op als indicator dat de firmware succesvol is geïnitialiseerd.
+3. **Communicatie:** Open een seriële terminal (bijv. de ModusToolbox Terminal) om het welkomstbericht en debugging-data te bekijken.
+4. **Kalibratie:** 
 
 
+---
 
-## Aan de slag
+## 🛠️ Aan de slag
 
-Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de praat krijgt.
+Volg deze stappen om de code te builden en te flashen naar de hardware:
 
-- [ ] Voeg hier een stapsgewijze handleiding toe.
-- [ ] Leg uit hoe je het programma start.
+### Prerequisites
+* ModusToolbox™ 3.x geïnstalleerd.
+* Juiste Board Support Packages (BSP) voor de gebruikte PSoC6 CY8CKIT-062-WIFI-BT/CY8CPROTO-062-4343W.
 
+### Project Setup & Build
+1. **Project importeren:**
+   Open ModusToolbox en importeer de gewenste workspace uit de repository: `AutoKit` of `RC_CarT`.
+2. **Build & Flash:**
+   - Voer een `Clean` en `Build` uit om de project-dependencies te compileren.
+   - Gebruik de `Program` tool om de firmware naar de microcontroller te schrijven.
 
+---
 
-## Discussie
+## 📊 Resultaten & Status
 
-**Wat werkt al?**
+### Huidige Status
+- [x] **Hardware:** Ontwerp en assemblage voltooid.
+- [x] **PCB:** Productie en component-populatie succesvol.
+- [x] **Firmware:** Basis abstractielaag en motor-aansturing operationeel.
 
-- [ ] Hardware ontwerp klaar
-- [ ] PCB geproduceerd
-- [ ] Firmware basis werkt
+---
 
-**Komende stappen**
+## 📂 Documentatie
 
-1. ...
-2. ...
+Uitgebreide technische details zijn beschikbaar in de `/docs` directory:
+- [📄 Design Document](./docs/design.md) - Architectuur en schema's.
+- [📘 User Manual](./docs/user-manual.md) - Gebruikersinstructies.
 
-**Bekende bugs of beperkingen**
+---
 
-- Link eventueel naar een issue bv. #1
-- ....
+## 👥 Team
 
+- **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) – *Software Architecture*
+- **Joel Akem** [@jjoellie](https://github.com/jjoellie) – *Firmware Development*
+- **Kaelig Guillemette** [@guikae06](https://github.com/guikae06) – *Hardware Engineering*
 
-
-## Personen
-
-- Anish Pun [@Anish-Pun](https://github.com/Anish-Pun) (Software)
-- Joel Akem [@jjoellie](https://github.com/jjoellie) (Firmware)
-- Kaelig Guillemette [@guikae06](https://github.com/guikae06) (Hardware)
+---

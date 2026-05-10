@@ -12,6 +12,28 @@ De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hi
 
 ---
 
+## Documentatie
+
+Gedetailleerde documentatie is te vinden in de [docs](./docs/) folder:
+
+### Algemeen
+- [Design Document](./docs/design.md)
+
+- [User Manual](./docs/user-manual.md)
+
+### English
+- [Joy-Con Subsystem](./docs/en/joycon_en.md)
+- [Self-Driving Subsystem](./docs/en/self_driving_en.md)
+- [Bluetooth Explained](./docs/en/Bluetooth_explained_en.md)
+- [Bluetooth Protocol](./docs/en/Bluetooth_protocol_en.md)
+
+### Nederlands
+- [Joy-Con Subsysteem](./docs/nl/joycon_nl.md)
+- [Self-Driving Subsysteem](./docs/nl/self_driving_nl.md)
+- [Bluetooth Uitgelegd](./docs/nl/Bluetooth_explained_nl.md)
+- [Bluetooth Protocol](./docs/nl/Bluetooth_protocol_nl.md)
+
+
 ## 🏗️ Hardware Varianten
 
 Het project is onderverdeeld in twee specifieke hardware-implementaties die gebruikmaken van dezelfde software-omgeving.

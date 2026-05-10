@@ -1,96 +1,149 @@
 # Joy-Con Subsystem
 
 ## Overview
-The Joy-Con subsystem provides Bluetooth-based manual control for the RC car and also acts as the user interface for switching between manual driving and self-driving operation. It combines Bluetooth discovery and pairing, HID communication, input decoding, status indication, and driving commands into one integrated subsystem.
+The Joy-Con subsystem provides Bluetooth-based manual control for the RC car and acts as the user interface for switching between manual driving and self-driving operation. It combines Bluetooth discovery and pairing, HID communication, input decoding, status indication, and driving commands into one integrated subsystem.
 
 ## Scope
-This document describes the full Joy-Con path in the firmware, including startup, Bluetooth communication, mode switching, LED feedback, and interaction with the motor and RC car control layers. It focuses on how the implementation works in the current codebase.
+This document describes the full Joy-Con path in the firmware, including startup, Bluetooth communication, mode switching, X button restart, LED feedback, and interaction with the motor and RC car control layers.
+
+## Source location
+The Joy-Con subsystem files are located under `rc_car/joycon/`:
+
+```
+rc_car/joycon/
+    joycon_classic.c / .h     — Bluetooth stack, HID protocol, input parsing, mode switching
+    joycon_drive_logic.c / .h — Hat input → motor commands
+    joycon_status_led.c / .h  — Connection state LED
+```
 
 ## Runtime position
-The firmware starts in `main.c`, initializes the board and UART logging, and then hands control to `rc_car_logic_init()` and `rc_car_logic_run()` for the supported RC car board configuration. Inside `rc_car_logic_run()`, a FreeRTOS task is created, and that task initializes the motors, the Joy-Con status LED, and the Joy-Con Bluetooth host before entering the main runtime loop.
+The firmware starts in `main.c`, which detects the target board via preprocessor defines. On the CY8CKIT-062-WIFI-BT Pioneer Kit, it calls `rc_car_logic_init()` and `rc_car_logic_run()`. The proto kit variant (`CY8CPROTO-062-4343W`) is detected but not yet implemented. Inside `rc_car_logic_run()`, a FreeRTOS task is created that initializes motors, the status LED, and the Joy-Con Bluetooth host before entering the main loop.
 
 ## Main modules
-The Joy-Con subsystem is built from five main source files.
 
-- `joycon_classic.c` implements Bluetooth stack startup, Joy-Con discovery, pairing, SDP, L2CAP channel setup, report activation, input decoding, and mode-switch button handling.
-- `app_bt_utils.c` provides helper functions for readable Bluetooth logs, such as event names, advertising mode names, disconnect reasons, and status names.
-- `joycon_drive_logic.c` translates selected Joy-Con hat directions into motor actions for manual driving.
-- `joycon_status_led.c` manages a single status LED that blinks during connection setup and stays on once input is active.
-- `rc_car_logic.c` connects the Joy-Con subsystem to the rest of the application and controls whether the car is in Bluetooth/manual mode or self-driving mode.
+| File | Responsibility |
+|---|---|
+| `joycon_classic.c` | Full Bluetooth host: discovery, pairing, SDP, L2CAP, input decoding, mode-switch buttons |
+| `app_bt_utils.c` | Readable Bluetooth log helpers (event names, disconnect reasons, status codes) |
+| `joycon_drive_logic.c` | Translates Joy-Con hat direction into `motor_*` calls for manual driving |
+| `joycon_status_led.c` | Blinks LED while connecting, solid on when input is active |
+| `rc_car_logic.c` | Owns operating mode state, creates FreeRTOS task, handles mode transitions |
 
 ## Public entry points
-The public API for the Bluetooth host side is intentionally small and consists of `joycon_classic_init()` and `joycon_classic_process()`. `joycon_classic_init()` initializes the Bluetooth platform and starts the WICED stack, while `joycon_classic_process()` services retries, delayed work, and keepalive behavior during runtime. At the application level, `rc_car_logic_set_mode()`, `rc_car_logic_get_mode()`, and `rc_car_logic_is_self_driving_active()` allow the broader system to switch and query the current operating mode.
+The Bluetooth host public API consists of `joycon_classic_init()` and `joycon_classic_process()`. At the application level, `rc_car_logic_set_mode()`, `rc_car_logic_get_mode()`, and `rc_car_logic_is_self_driving_active()` allow the broader system to switch and query the current operating mode.
 
-## Startup sequence
-The runtime sequence begins with board initialization and UART setup in `main.c`. The RC car task then initializes the motor layer, stops the motors, initializes the LED, sets the LED to connecting mode, and starts the Joy-Con Bluetooth host through `joycon_classic_init()`. After that, the task continuously calls `joycon_classic_process()` and `joycon_status_led_process()`, and only calls `self_driving_step()` when self-driving mode is active.
+## FreeRTOS task loop
+The main task loop runs continuously:
+
+```c
+for (;;) {
+    joycon_classic_process();       // BT input, retries, keepalive, mode buttons
+    joycon_status_led_process();    // blink or hold LED
+
+    if (mode == RC_CAR_MODE_SELF_DRIVING)
+        self_driving_step();        // 50 ms sensor-decide-act cycle
+    else
+        vTaskDelay(10 ms);          // yield in BT mode
+}
+```
 
 ## Bluetooth host behavior
-The Bluetooth host logic is implemented in `joycon_classic.c` using the WICED Bluetooth stack and related management, SDP, and L2CAP APIs. The configured device name is `PSoC6-JoyConHost`, and the implementation is structured as a host that searches for a Joy-Con candidate, secures the connection, opens HID channels, and then processes incoming controller reports.
+The Bluetooth host uses the WICED BR/EDR stack. The configured device name is `PSoC6-JoyConHost`. The host searches for a Joy-Con candidate, secures the connection, opens HID channels, activates input reports, and then processes controller input continuously.
 
-## Important functions in `joycon_classic.c`
-The most important internal functions are `app_bt_management_callback()`, `app_start_inquiry()`, `app_start_security()`, `app_start_sdp()`, `app_open_hid_channels()`, `app_try_send_enable_reports()`, `app_send_subcommand_03()`, and `app_l2cap_data_ind_cb()`. Together, these functions implement the full controller connection path from Bluetooth startup to active input parsing.
+## Important internal functions
 
-## Discovery and candidate selection
-After the Bluetooth stack reports `BTM_ENABLED_EVT`, the management callback marks Bluetooth as ready and schedules inquiry. Candidate filtering is done through helper logic such as `app_is_joycon_candidate()`, `app_name_looks_like_joycon()`, and `app_remote_name_looks_like_joycon()`, which indicates that the code checks both class-related and name-related information before continuing.
-
-## Pairing and reconnection
-Security handling is performed through management events and explicit security startup logic. The implementation stores local identity keys and paired BR/EDR link keys, restores keys for known devices, accepts user-confirmation requests, and replies to legacy PIN requests with `0000`, which supports reconnecting without repeating the full pairing flow every time.
-
-## SDP and L2CAP channels
-The code defines two HID-related PSM values: `0x0011` for the control channel and `0x0013` for the interrupt channel. An SDP discovery database of 1024 bytes is allocated before the code opens the L2CAP HID channels, which matches the expected sequence of service discovery followed by transport setup.
-
-## Input report activation
-Once both L2CAP channels are connected, `app_try_send_enable_reports()` calls `app_send_subcommand_03()`. That function sends a control-channel packet beginning with `0xA2`, report ID `0x01`, and subcommand `0x03` with value `0x30`, which requests the standard full input report mode used by the input parser.
+| Function | Role |
+|---|---|
+| `app_bt_management_callback()` | Central BT event handler |
+| `app_start_inquiry()` | Starts BR/EDR device inquiry |
+| `app_is_joycon_candidate()` | Filters by device class and HID UUID |
+| `app_name_looks_like_joycon()` | Validates EIR name fields |
+| `app_start_security()` | Initiates pairing or key restoration |
+| `app_start_sdp()` | SDP service discovery before channel setup |
+| `app_open_hid_channels()` | Opens L2CAP control (0x0011) and interrupt (0x0013) |
+| `app_try_send_enable_reports()` | Sends report-mode activation once both channels are up |
+| `app_send_subcommand_03()` | Sends subcommand 0x03 / value 0x30 for full input report mode |
+| `app_l2cap_data_ind_cb()` | Parses incoming HID reports, dispatches input and buttons |
 
 ## Input parsing
-Incoming interrupt-channel data is handled in `app_l2cap_data_ind_cb()`. When the payload begins with `0xA1` and report ID `0x3F`, the code extracts button bytes, hat direction, and analog stick values from fixed offsets in the packet and updates its cached controller state. The module only reacts when the state changes, which avoids repeating the same actions on unchanged input frames.
+`app_l2cap_data_ind_cb()` processes interrupt-channel packets starting with `0xA1 0x3F`. Parsed fields:
 
-## Manual driving behavior
-Manual movement is driven through `joycon_drive_logic_handle_hat()` when self-driving mode is not active. In the current implementation, hat value `0x00` drives forward, values `0x06` and `0x07` turn right, values `0x02` and `0x01` turn left, and all other values stop the car. The manual driving layer uses a fixed PWM command of 100 for these actions.
+| Byte | Field | Use |
+|---|---|---|
+| `[2]` | `btn0` | Mode-switch and restart buttons |
+| `[3]` | `btn1` | Button byte 1 |
+| `[4] & 0x0F` | `hat` | D-pad direction → drive logic |
+| `[5]`,`[7]` | `lx`, `ly` | Left stick |
+| `[9]`,`[11]` | `rx`, `ry` | Right stick |
 
-## Mode switching
-The Joy-Con subsystem also acts as the user input interface for switching operating modes. In `joycon_classic.c`, button changes are checked against `JOYCON_BTN_SELF_MASK` with value `0x08` and `JOYCON_BTN_MANUAL_MASK` with value `0x04`. A press on the self-driving button calls `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)`, while a press on the manual/Bluetooth button calls `rc_car_logic_set_mode(RC_CAR_MODE_BLUETOOTH)`.
+## Mode switching buttons
+
+| Button | `btn0` mask | Action |
+|---|---|---|
+| Self-driving button | `0x08` | `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)` |
+| Manual/BT button | `0x04` | `rc_car_logic_set_mode(RC_CAR_MODE_BLUETOOTH)` |
+| **X button** | **`0x02`** | **`self_driving_enter()` — restarts self-driving if halted** |
+
+Button presses are edge-detected (XOR with previous `btn0`) so each press fires exactly once. The X button only fires when `rc_car_logic_is_self_driving_active()` AND `self_driving_is_halted()` are both true — it cannot accidentally switch modes during normal driving.
+
+## Manual driving — hat mapping
+
+| Hat value | Direction | Motor command |
+|---|---|---|
+| `0x00` | Up | `motor_forward(100)` |
+| `0x01`, `0x02` | Up-right / Right | `motor_turn_left(100)` |
+| `0x06`, `0x07` | Down-left / Left | `motor_turn_right(100)` |
+| Other | Neutral | `motor_stop()` |
+
+Hat input is only forwarded to drive logic when self-driving mode is not active.
 
 ## LED behavior
-The status LED is connected to pin `P13_7` and is configured as active-low. While the controller is connecting, the LED blinks by toggling every 25 software ticks inside `joycon_status_led_process()`. Once valid input is received, `joycon_status_led_set_input_ready()` changes the LED to a steady on state.
 
-## Logging helpers
-`app_bt_utils.c` improves the readability of runtime logs by converting numeric Bluetooth values into readable strings. It includes helpers for printing Bluetooth device addresses and for naming management events, advertising modes, GATT disconnect reasons, and GATT status codes.
+| State | LED |
+|---|---|
+| Connecting / searching | Blinking every 25 ticks |
+| Input reports received | Solid on |
 
-## Interaction with the RC car layer
-`rc_car_logic.c` initializes the Joy-Con-related modules and decides whether manual or self-driving behavior should run in the main task loop. When the system enters self-driving mode for the first time, `rc_car_logic_set_mode()` initializes the ultrasonic, IMU, and speed modules, then calls `self_driving_enter()`. When the system returns to Bluetooth/manual mode, `rc_car_logic_set_mode()` calls `self_driving_exit()` if needed, stops the motors, and prints the mode change to the console.
+LED pin: P13_7 (active-low). Initialized in `joycon_status_led_init()`.
 
-## Hardware dependencies
-The Joy-Con subsystem depends on the motor layer, the RC car logic layer, and the board-specific Bluetooth configuration. It also uses the PWM motor outputs indirectly through the manual drive logic and uses the LED output on `P13_7` for status indication.
+## Pairing and reconnection
+The implementation stores and restores `wiced_bt_device_link_keys_t` and `wiced_bt_local_identity_keys_t`. Auto-confirms user-confirmation requests and answers legacy PIN requests with `"0000"`. Supports reconnection to a previously paired Joy-Con without repeating the full pairing flow.
 
-## Supported functionality
-The current implementation supports Joy-Con discovery, candidate filtering, pairing or key restoration, SDP, HID control and interrupt channel setup, input report activation, input parsing, manual drive commands from the hat switch, connection-state LED feedback, and mode switching between Bluetooth/manual and self-driving operation. It also supports UART-based debug logging with readable Bluetooth event names through the helper module.
+## Keepalive
+While in input-report mode, `joycon_classic_process()` re-sends subcommand `0x03` every 100 ticks (~1 s) to keep the session alive.
+
+## Disconnect and reconnect
+On L2CAP disconnect: channel IDs are cleared, drive logic is reset, LED returns to blinking, and `app_start_security()` is called again automatically if the Joy-Con BD address is still known.
 
 ## Limitations
-The current Joy-Con implementation focuses on connection setup, input handling, manual driving, and mode switching. It does not currently implement extra Joy-Con features such as active rumble control, battery reporting, NFC or IR support, or analog-stick-based driving. Manual driving is limited to hat-direction input only.
+No rumble (placeholder bytes only), no IMU subcommands, no SPI reads, no battery queries, no player LEDs, no NFC or IR. Manual driving uses hat direction only — no analog stick driving.
 
 ## Discovery and control flow
 ```mermaid
 flowchart TD
-    A[main.c] --> B[rc_car_logic_init]
+    A[main.c - board detect] --> B[rc_car_logic_init]
     B --> C[rc_car_logic_run]
-    C --> D[JoyCon task starts]
-    D --> E[joycon_classic_init]
-    E --> F[BT stack enabled]
-    F --> G[app_start_inquiry]
-    G --> H{Joy-Con candidate found?}
-    H -- No --> G
-    H -- Yes --> I[app_start_security]
-    I --> J[app_start_sdp]
-    J --> K[app_open_hid_channels]
-    K --> L[app_try_send_enable_reports]
-    L --> M[Input report received]
-    M --> N[Parse buttons and hat]
-    N --> O{Self-driving button pressed?}    
-    O -- Yes --> P[rc_car_logic_set_mode SELF_DRIVING]
-    O -- No  --> Q{Manual/Bluetooth button pressed?}   
-    Q -- Yes --> R[rc_car_logic_set_mode BLUETOOTH]
-    Q -- No  --> S{Self-driving active?}             
-    S -- Yes --> T[Ignore manual hat driving]
-    S -- No  --> U[joycon_drive_logic_handle_hat]
+    C --> D[FreeRTOS JoyCon Task]
+    D --> E[motor_init + motor_stop]
+    E --> F[joycon_status_led_init]
+    F --> G[joycon_classic_init]
+    G --> H[BT stack enabled]
+    H --> I[app_start_inquiry]
+    I --> J{Joy-Con candidate?}
+    J -- No --> I
+    J -- Yes --> K[app_start_security]
+    K --> L[app_start_sdp]
+    L --> M[app_open_hid_channels]
+    M --> N[app_try_send_enable_reports]
+    N --> O[Input reports received]
+    O --> P[Parse btns / hat]
+    P --> Q{btn0 = Y / 0x08? }
+    Q -- Yes --> R[Set SELF_DRIVING mode]
+    P --> S{btn0 =  B / 0x04?}
+    S -- Yes --> T[Set BLUETOOTH mode]
+    P --> U{btn0 = X / 0x02 and halted?}
+    U -- Yes --> V[self_driving_enter restart]
+    P --> W{Self-driving active?}
+    W -- Yes --> X[Ignore manual hat driving]
+    W -- No --> z[joycon_drive_logic_handle_hat]
 ```

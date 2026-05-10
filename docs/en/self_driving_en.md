@@ -7,78 +7,149 @@ The self-driving subsystem provides autonomous obstacle-aware motion for the RC 
 This document explains how self-driving mode is initialized, which modules it uses, how `self_driving_step()` makes movement decisions, and which safety conditions stop the vehicle. It focuses on the implemented behavior in the firmware rather than planned autonomous features.
 
 ## Runtime position
-The firmware enters self-driving mode through `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)`. On the first transition into this mode, `rc_car_logic.c` initializes the ultrasonic sensors, IMU module, and speed module, then calls `self_driving_enter()` and switches the global mode state to self-driving.
+The firmware enters self-driving mode through `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)`. On the first transition into this mode, `rc_car_logic.c` lazy-initializes the ultrasonic sensors, IMU module, and speed module, then calls `self_driving_enter()` and switches the global mode state to self-driving. Sensors are only initialized once — subsequent mode switches reuse the already-initialized peripherals.
 
 ## Main modules
 The self-driving subsystem is composed of four main source files.
 
-- `self_driving.c` contains the high-level autonomous control loop and movement decisions.
-- `ultrasonic.c` measures obstacle distance on the left and right sides.
+- `self_driving.c` contains the high-level autonomous control loop, movement decisions, IMU baseline detection, and halt state management.
+- `ultrasonic.c` measures obstacle distance on the left and right sides using HC-SR04 sensors.
 - `imu.c` initializes the MPU6050, enables motion interrupts, and reads accelerometer and gyroscope data.
 - `speed.c` counts wheel encoder pulses and derives distance-based speed estimates for the left and right sides.
 
 ## Entry points
-The self-driving control API consists of `self_driving_enter()`, `self_driving_exit()`, `self_driving_step()`, and `self_driving_is_halted()`. `self_driving_enter()` prepares the subsystem for autonomous driving, `self_driving_exit()` stops motion and clears halt state, and `self_driving_step()` performs one full sensing and decision cycle.
 
-## Enter and exit behavior
-When self-driving mode starts, `self_driving_enter()` clears `Motion_Detected`, resets the wheel encoders, clears internal halt flags, prints a mode message, and commands the motors to move forward with a value of 65. When the mode is exited, `self_driving_exit()` stops the motors, clears halt flags, and prints an exit message.
+| Function | Description |
+|---|---|
+| `self_driving_enter()` | Resets state, captures IMU baseline, starts forward motion |
+| `self_driving_exit()` | Stops motors, clears all state flags |
+| `self_driving_step()` | One full sense-decide-act cycle, called every 50 ms |
+| `self_driving_is_halted()` | Returns `true` when car is in persistent halt state |
+
+## Enter behavior
+When self-driving mode starts, `self_driving_enter()`:
+- Clears `Motion_Detected` and resets wheel encoders
+- Resets all halt flags and debounce counters
+- Captures a live IMU reading as the **baseline** (`base_ax`, `base_ay`, `base_az`) — used later to detect lift relative to the car's actual starting orientation
+- Clears the terminal and prints the status header
+- Commands motors forward at 65%
+
+## Exit behavior
+`self_driving_exit()` stops the motors, clears halt flags and debounce counters, and prints an exit message.
 
 ## Control loop
-`self_driving_step()` is called repeatedly from the RC car task while the global mode is self-driving. In each cycle, it first checks whether the subsystem is halted, then reads IMU values, reads left and right obstacle distances, reads the encoder-based speed values, prints a formatted status line, evaluates safety conditions, and finally decides whether to stop, turn, or continue forward.
+`self_driving_step()` is called repeatedly from the RC car FreeRTOS task while the global mode is self-driving. Each cycle:
+
+1. Reads IMU (ax, ay, az, gx, gy, gz)
+2. Reads left and right ultrasonic distances
+3. Reads encoder-based speed values
+4. Updates terminal display (lines 2, 3, 4 in-place — no scrolling)
+5. Checks halt state
+6. Evaluates IMU lift/crash detection
+7. Evaluates obstacle logic
+8. Issues motor command
+9. Delays 50 ms
+
+## Terminal output
+The subsystem writes three fixed lines to the terminal using ANSI escape codes, overwriting in place every cycle with no scrolling:
+
+| Line | Content |
+|---|---|
+| Line 2 | Sensor status: distances, speeds, encoder counts, IMU axes, motion flag |
+| Line 3 | Last event message (obstacle, lift, halt, clear path) |
+| Line 4 | Full IMU read including gyro and baseline comparison values |
+
+## IMU lift and crash detection
+Rather than using a fixed absolute threshold, `self_driving_step()` compares each IMU read against the **baseline captured at startup** using delta values:
+
+```
+dAX = ax - base_ax
+dAY = ay - base_ay
+dAZ = az - base_az
+```
+
+If `|dAX| > 3000` or `|dAY| > 3000` or `|dAZ| > 2500`, a debounce counter (`imu_counter`) increments. The counter must reach **3 consecutive detections** before the car halts. This prevents single-bump false positives while still catching real lifts and crashes. The counter resets to 0 whenever values return to normal.
+
+When triggered, the car enters `halted_until_restart` with an event message showing the delta values. The interrupt-based `Motion_Detected` flag is cleared each cycle as it was causing false positives on this hardware setup — the baseline delta approach is used instead.
+
+## Halt state
+`halted_until_restart` is a persistent flag set by both obstacle and IMU detection. While active:
+- Motors are stopped every cycle
+- The halt event message is printed once
+- The step function returns immediately without running navigation logic
+- The flag is only cleared by `self_driving_enter()` or `self_driving_exit()`
+
+The X button on the Joy-Con (`btn0 = 0x02`) calls `self_driving_enter()` directly when the car is halted, restarting autonomous operation without switching modes.
 
 ## Obstacle handling
-The obstacle logic uses two ultrasonic measurements, one on the right and one on the left. If both measured distances are below 20 cm, the vehicle stops, enters a halted state, and stays stopped until a restart condition clears that state. If only the right side is blocked, the car turns left at a command value of 80, and if only the left side is blocked, it turns right at the same command value. If neither side is below the threshold, the car continues forward at a command value of 65.
 
-## Halt behavior
-The self-driving subsystem maintains a persistent halt state using `halted_until_restart`. While this state is active, `self_driving_step()` forces the motors to stop, prints a halt message once, waits 50 ms, and returns without running the normal navigation logic. The helper `self_driving_is_halted()` exposes this state to other code.
+| Condition | Action |
+|---|---|
+| Both sensors < 18 cm | `motor_stop()`, enter `halted_until_restart` |
+| Right sensor < 25 cm | `motor_turn_left(70)` |
+| Left sensor < 25 cm | `motor_turn_right(70)` |
+| Both clear | `motor_forward(80)` |
 
-## IMU safety behavior
-The IMU layer uses an MPU6050 connected over I2C with `IMU_SDA` on `P6_1`, `IMU_SCL` on `P6_0`, and an interrupt line on `P10_5`. During initialization, the code wakes the MPU6050, checks the `WHO_AM_I` register against the expected value `0x68`, and then enables motion-detection interrupts. If a motion interrupt occurs, the ISR stops the motors and sets `Motion_Detected` to true, which causes `self_driving_step()` to perform an emergency stop on the next cycle.
-
-## Lift detection
-In addition to the interrupt-based stop, the control loop also checks the Z-axis acceleration value `az` after each IMU read. If `az` falls below 8000, the code treats this as a lift condition, stops the motors, and prints a lift-detected message. This adds a second safety mechanism against the car being picked up or tilted unexpectedly.
+The halt threshold (18 cm) is tighter than the turn threshold (25 cm), giving a reaction zone before full stop.
 
 ## Ultrasonic sensing
-The ultrasonic module uses two trigger and echo pairs: right trigger `P9_0` with right echo `P9_1`, and left trigger `P9_4` with left echo `P9_5`. Each reading sends a short trigger pulse, measures how long the echo line stays high, and converts the resulting pulse duration into centimeters using the speed-of-sound calculation in the driver. If the echo wait or pulse width exceeds the timeout, the driver returns a large fallback distance value of 1000 cm.
+The ultrasonic module uses two trigger/echo pairs:
+
+| Sensor | Trigger | Echo |
+|---|---|---|
+| Right | P9_0 | P9_1 |
+| Left | P9_4 | P9_5 |
+
+Each reading sends a 10 µs trigger pulse, measures echo pulse duration in microseconds, and converts to centimetres using `duration × 0.0343 / 2`. Both trigger pins are held low and given 100 ms to settle after `ultrasonic_init()`. If the echo wait or pulse width exceeds 20 000 µs, the driver returns 1000 cm (treated as clear path).
 
 ## Speed estimation
-The speed module uses wheel encoder inputs on `P9_6` and `P9_7`. Rising-edge GPIO interrupts increment `Count_EncoderRight` and `Count_EncoderLeft`, and the reported speed values are derived from those counts using `COUNTS_PER_METER` with a value of `235.0`. The functions `get_speed_right_kmh()` and `get_speed_left_kmh()` convert accumulated distance to km/h, but in the current code they do not divide by elapsed time, so they behave more like a distance-based indicator than a true instantaneous speed measurement.
+The speed module uses wheel encoders on P9_6 (right) and P9_7 (left). Rising-edge GPIO interrupts increment `Count_EncoderRight` and `Count_EncoderLeft`. Speed is derived as:
+
+```
+distance_m = count / 235.0
+speed_kmh  = distance_m × 3.6
+```
+
+This gives cumulative distance since the last `reset_encoders()` call expressed as a km/h equivalent, not instantaneous speed. Encoders are reset each time `self_driving_enter()` is called.
 
 ## Motor interaction
-The self-driving subsystem relies on the common motor layer to execute decisions. `motor_forward()` sets all four PWM outputs, `motor_stop()` clears all four duty cycles, `motor_turn_left()` powers motors A and C only, and `motor_turn_right()` powers motors B and D only. The motor pins are mapped to `P10_0` through `P10_3` in `pins.h`.
+The self-driving subsystem uses the common motor layer:
 
-## Logging and diagnostics
-`self_driving_step()` builds and prints a live status line containing right and left distance, right and left speed values, encoder counts, accelerometer values, and the `Motion_Detected` flag. This gives a useful real-time view of the autonomous state during debugging and testing.
+| Function | Effect |
+|---|---|
+| `motor_forward(80)` | All 4 wheels forward at 80% |
+| `motor_turn_left(70)` | Wheels A+C at 70%, B+D stopped |
+| `motor_turn_right(70)` | Wheels B+D at 70%, A+C stopped |
+| `motor_stop()` | All 4 wheels at 0% |
+
+`motor_forward()` includes a soft-start ramp from 20% upward in 5% steps with 20 ms between each step, preventing inrush current spikes when all 4 motors start simultaneously on AA battery power.
 
 ## Supported functionality
-The current implementation supports autonomous forward motion, obstacle avoidance using left and right ultrasonic sensors, emergency stop on motion interrupt, lift detection using the Z-axis acceleration threshold, encoder counting, mode entry and exit, and persistent halting when both sides are blocked. It is tightly integrated with the RC car mode manager so that the subsystem only runs when self-driving mode is active.
+Autonomous forward motion, obstacle avoidance on left and right sides, baseline-relative IMU lift and crash detection with 3-cycle debounce, in-place terminal diagnostics on 3 lines, persistent halt state with X button restart, encoder counting, mode entry and exit.
 
 ## Limitations
-The current implementation uses a simple rule-based controller rather than path planning, mapping, or sensor fusion. There is no route memory, no target destination logic, no gradual speed control, and no evidence of PID-based steering or closed-loop velocity control in the provided code. The reported speed functions also do not compute speed over time, which limits their accuracy as physical speed measurements.
+Simple rule-based controller with no path planning, mapping, or sensor fusion. No PID-based steering or closed-loop velocity control. Speed functions measure cumulative distance rather than instantaneous speed. The interrupt-based IMU motion flag is disabled due to hardware noise on this setup — baseline delta detection is used instead.
 
 ## Self-driving flow
 ```mermaid
 flowchart TD
-    A[rc_car_logic_set_mode SELF_DRIVING] --> B[ultrasonic_init]
-    A --> C[imu_init]
-    A --> D[speed_init]
-    A --> E[self_driving_enter]
-    E --> F[self_driving_step loop]
-    F --> G{Halted_until_restart?}
-    G -- Yes --> H[Stop and return]
-    G -- No --> I[Read IMU values]
-    I --> J[Read left and right distances]
-    J --> K[Read encoder-based speed]
-    K --> L[Print status line]
-    L --> M{Motion_Detected?}
-    M -- Yes --> N[Emergency stop]
-    M -- No --> O{az < 8000?}
-    O -- Yes --> P[Lift stop]
-    O -- No --> Q{Both distances < 20 cm?}
-    Q -- Yes --> R[Set halted_until_restart]
-    Q -- No --> S{Right < 20 cm?}
-    S -- Yes --> T[Turn left]
-    S -- No --> U{Left < 20 cm?}
-    U -- Yes --> V[Turn right]
-    U -- No --> W[Drive forward]
+    A[rc_car_logic_set_mode SELF_DRIVING] --> B{First time?}
+    B -- Yes --> C[ultrasonic_init / imu_init / speed_init]
+    B -- No --> D[self_driving_enter]
+    C --> D
+    D --> E[Capture IMU baseline]
+    E --> F[motor_forward 65]
+    F --> G[self_driving_step loop every 50ms]
+    G --> I[Read IMU + distances + speed]
+    I --> J{halted_until_restart?}
+    J -- Yes --> K[motor_stop, return]
+    J -- No --> L{IMU delta > threshold x3?}
+    L -- Yes --> M[Halt: LIFT DETECTED]
+    L -- No --> N{Both sensors < 18cm?}
+    N -- Yes --> O[Halt: BOTH OBSTACLES]
+    N -- No --> P{Right < 25cm?}
+    P -- Yes --> Q[motor_turn_left 70]
+    P -- No --> R{Left < 25cm?}
+    R -- Yes --> S[motor_turn_right 70]
+    R -- No --> T[motor_forward 80]
 ```

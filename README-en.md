@@ -1,93 +1,89 @@
-# RC_Car
-
-
+# AGV_RCCar 🏎️
 
 ![Overview](./docs/images/RC_Car.gif)
 
+## 📖 Description
 
-## Description
+The **AGV_RCCar** project is an advanced embedded system that transforms RC vehicles into Automated Guided Vehicles (AGV). The system is designed for dual-mode operation:
+- **Manual Mode:** Real-time control via a wireless Bluetooth connection (Joy-con).
+- **Autonomous Mode:** Self-contained navigation using line-tracking and active obstacle avoidance via ultrasonic sensors.
 
-Add a brief description of your project here. Explain:
-- What does your project do?
-- Why was it created?
-- What makes it special?
+The core value of this project lies in its **cross-platform firmware architecture**. This allows different hardware chassis (such as the Mini and Large variants) to be controlled using a uniform logical foundation.
 
-### Sequence of Operation
+---
 
-Briefly describe what to expect after all hardware and software have been set up according to the steps under **Getting Started**. This section serves as a guide for non-technical users.
+## 🏗️ Hardware Variants
 
-1. Connect the board to the computer via USB.
-2. The green LED automatically turns on to indicate that the system is active.
-3. A welcome message appears in the serial terminal.
-4. The linear slider performs an automatic calibration and moves itself to the center.
-5. Wait for a beep and then place the phone on the slider holder.
+The project is divided into two specific hardware implementations that utilize the same software environment.
 
-Follow any further instructions displayed in the terminal or visible on the interface.
+### 1. Mini RC Car (Primary Project)
+This is the main platform for developing autonomous navigation algorithms.
+*   **Microcontroller:** PSoC 6 (CY8CKIT-062-WIFI-BT)
+*   **Focus:** Precision, line-tracking, and sensor data processing.
 
+### 2. RC_CarT (Large Scale Project)
+An initiative to scale the firmware to a larger, more powerful chassis.
+*   **Motors:** 2x My1018 24V DC motors.
+*   **Microcontroller:** PSoC 6 (CY8CPROTO-062-4343W) for consistency with the development environment.
+*   **Status:** **ON HOLD**. The MD22 motor driver has failed. An industrial upgrade (Sabertooth 2x32A) is currently being sourced.
+*   **Power:** Uses a DC converter to power the microcontroller directly from the main batteries for full autonomy.
 
+---
 
-## Materials and Methods
+## 🔋 Battery Management & Safety (RC_CarT)
 
-- **Hardware**: [KiCAD PCB design, components...]
-- **Firmware**: [ModusToolbox, PSoC6, C]
-- **PLC**: [TwinCAT, Structured Text]
-- **Software**: [Python, dashboard/AI tools]
-- **Methodology**: brief description of the approach.
+For the large-scale vehicle, we use **Turnigy 6s 5800mAh (XT90 connectors)** batteries. Proper charging is crucial for battery lifespan and safety.
 
-_See the README in each folder for details!_
+### Charging Instructions
+Use the **Accucell 6** charger with the following settings:
+1.  Select program: `LiPo BATT`.
+2.  Select: `LiPo CHARGE`.
+3.  **Voltage:** Manually set to `22.2V (6S)` if the charger does not recognize it automatically.
+4.  **Current:** Maximum 5.0A, but **2.0A or 3.0A** is highly recommended for safety.
 
+![Discharge](./docs/images/LiPo_discharge_menu.jpg) *(Image: Program menu for discharging the battery)*
 
+![Charging Screen](./docs/images/) *(Image: The charging screen display during an active charge cycle)*
 
-## Documentation
+> **💡 Extra Tip:** If the Accucell fails to recognize the battery due to a voltage that is too low (deep discharge), briefly charge the battery using a DC lab power supply set to exactly 22.2V until the voltage is high enough for the charger to detect the cells again.
 
-Detailed documentation can be found in the [docs](./docs/) folder:
+---
 
-- [Design Document](./docs/design.md)
-- [User Manual](./docs/user-manual.md)
+## ⚙️ Technical Stack
 
+| Component | Technology |
+|:--- |:--- |
+| **Microcontrollers** | PSoC 6 (Proto & WiFi-BT), Arduino Uno (Testing) |
+| **Motor Drivers** | MD22 (Legacy), Sabertooth 2x32A |
+| **Dev Environment** | ModusToolbox™ (Infineon) |
+| **Programming Language** | C (Embedded) |
+| **Sensors** | HC-SR04 Ultrasonic, Line Tracking Array |
 
+---
 
-## Results
+## 🚀 Sequence of Operation
 
-- Brief summary of key findings.
-- Any graphs, tables, or images.
-- Reflection on performance or reliability.
+1.  **Power-up:** Connect the board via USB or turn on the main switch (for battery power).
+2.  **System Status:** The green LED lights up once the firmware is active.
+3.  **Communication:** Open the ModusToolbox Terminal to view welcome messages and debug information.
+4.  **Calibration:** The linear slider centers itself automatically; wait for the audible beep before operation.
 
+---
 
+## 🛠️ Getting Started
 
-## Getting Started
+### Prerequisites
+*   ModusToolbox™ 3.x installed.
+*   Relevant BSPs (Board Support Packages) for the PSoC 6 variants.
 
-Nothing more frustrating than finding good code without explanation on how to get it running.
+### Project Setup
+1.  **Import Project:** Open ModusToolbox and import the desired workspace: `AutoKit` (Mini) or `RC_CarT` (Large).
+2.  **Build & Flash:** Perform a `Clean` and `Build`, then use the `Program` tool to upload the code to the microcontroller.
 
-- [ ] Add a step-by-step guide here.
-- [ ] Explain how to start the program.
+---
 
+## 👥 Team
 
-
-## Discussion
-
-**What's working already?**
-
-- [ ] Hardware design complete
-- [ ] PCB produced
-- [ ] Firmware basics working
-- [ ] PLC program working
-- [ ] Dashboard/software working
-
-**Next steps**
-
-1. ...
-2. ...
-
-**Known bugs or limitations**
-
-- Link to an issue if applicable, e.g. #1
-- ....
-
-
-
-## People
-
-- Anish Pun [@Anish-Pun](https://github.com/Anish-Pun) (Software)
-- Joel Akem [@jjoellie](https://github.com/jjoellie) (Firmware)
-- Kaelig Guillemette [@guikae06](https://github.com/guikae06) (Hardware)
+- **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) – *Software Architecture*
+- **Joel Akem** [@jjoellie](https://github.com/jjoellie) – *Firmware Development*
+- **Kaelig Guillemette** [@guikae06](https://github.com/guikae06) – *Hardware Engineering*

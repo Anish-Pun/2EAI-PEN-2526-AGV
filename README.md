@@ -43,7 +43,7 @@ Gebruik de **Accucell 6** lader met de volgende instellingen:
 
 ![Discharge](./docs/images/LiPo_discharge_menu.jpg) *(Afbeelding: Programma om het batterij te onladen)*
 
-![Laadscherm](./docs/images/accucell_screen.jpg) *(Afbeelding: Het laad scherm wanner de batterij aan het opladen bent)*
+![Laadscherm](./docs/images/) *(Afbeelding: Het laad scherm wanner de batterij aan het opladen bent)*
 
 > **💡 Extra Tip:** Als de Accucell de batterij niet herkent omdat het voltage te laag is (deep discharge), laad de accu dan heel even kort op via een DC labvoeding op exact 22.2V totdat het voltage hoog genoeg is voor de lader om de cellen weer te herkennen.
 

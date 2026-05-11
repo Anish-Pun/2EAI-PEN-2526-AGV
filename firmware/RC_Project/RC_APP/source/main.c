@@ -53,12 +53,12 @@ int main(void)
     printf("\033[2J\033[H");
     printf("Main started\r\n");
 
-#if defined(TARGET_APP_CY8CKIT_062_WIFI_BT) || defined(TARGET_APP_CY8CPROTO_062_4343W)
+#if defined(TARGET_APP_CY8CKIT_062_WIFI_BT))
     printf("Detected board: CY8CKIT-062-WIFI-BT -> RC CAR\r\n");
     rc_car_logic_init();
     rc_car_logic_run();
 
-#elif defined(TARGET_CY8CPROTO_062_4343W) || defined(CY8CPROTO_062_4343W)
+#elif defined(TARGET_APP_CY8CPROTO_062_4343W)
     printf("Detected board: CY8CPROTO-062-4343W -> RC CART (not implemented yet)\r\n");
 
     while (1)

@@ -1,88 +1,153 @@
-# AGV_RCCar
-
+# AGV 🏎️
 
 ![Overzicht](./docs/images/RC_Car.gif)
 
+## 📖 Projectbeschrijving
 
-## Beschrijving
+Het **AGV_RCCar** project is een geavanceerd embedded systeem dat RC-voertuigen transformeert in Autonomous Guided Vehicles (AGV). Het systeem is ontworpen voor dual-mode operatie:
+- **Manuele Modus:** Real-time besturing via een draadloze Bluetooth-verbinding (Joy-con).
+- **Autonome Modus:** Zelfstandige navigatie met behulp van ultrasone sensoren om actief obstakels te vermijding.
 
-Ons project bestaat uit het ontwikkelen van een RC-car die zowel manueel als autonoom kan worden bestuurd. In de manuele modus wordt de wagen aangestuurd via een Bluetooth-verbinding, terwijl hij in de autonome modus gebruikmaakt van een ultrasone sensor en een line tracker om zelfstandig te rijden en obstakels te vermijden.
-Het doel van dit project is om praktijkervaring op te doen met embedded systemen, sensoren en draadloze communicatie. Wat het project bijzonder maakt, is de combinatie van real-time besturing en autonome besluitvorming binnen één geïntegreerd systeem.
+De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hierdoor kunnen verschillende hardware-onderstellen (zoals de Mini en de Large variant) aangestuurd worden met een uniforme logische basis.
 
-### Sequence of operation
-
-Beschrijf kort wat je verwacht nadat alle hardware en software zijn opgezet volgens de stappen onder **Getting Started**. Deze sectie dient als handleiding voor niet-technische gebruikers.
-
-1. Verbind het bord met de computer via USB.
-2. De groene LED schakelt automatisch in om aan te geven dat het systeem actief is.
-3. In de seriële terminal verschijnt een welkomstbericht.
-4. De lineaire slider voert een automatische kalibratie uit en beweegt zichzelf naar het midden.
-5. Wacht tot een piepsignaal klinkt en plaats daarna de telefoon op de houder van de slider.
-
-Volg eventueel verdere aanwijzingen die in de terminal worden weergegeven of op de interface te zien zijn.
-
-
-
-## Materialen en methodes
-
-- **Hardware**: MD22, ...
-- **Firmware**: ModusToolbox, PSoC6, Arduino, ESP32
-- **Software**: C
-- **Methodologie**: korte beschrijving van de werkwijze.
-
-_Zie de README in elke map voor details!_
-
-
+---
 
 ## Documentatie
 
 Gedetailleerde documentatie is te vinden in de [docs](./docs/) folder:
 
+### Algemeen
 - [Design Document](./docs/design.md)
 
 - [User Manual](./docs/user-manual.md)
 
-  
+### English
+- [Joy-Con Subsystem](./docs/en/joycon_en.md)
+- [Self-Driving Subsystem](./docs/en/self_driving_en.md)
+- [Bluetooth Explained](./docs/en/Bluetooth_explained_en.md)
+- [Bluetooth Protocol](./docs/en/Bluetooth_protocol_en.md)
 
-## Resultaten
-
-- Korte samenvatting van de belangrijkste bevindingen.
-- Eventuele grafieken, tabellen of afbeeldingen.
-- Reflectie op prestaties of betrouwbaarheid.
-
-
-
-## Aan de slag
-
-Niets zo frustrerend als goede code vinden zonder uitleg over hoe je het aan de praat krijgt.
-
-- [ ] Voeg hier een stapsgewijze handleiding toe.
-- [ ] Leg uit hoe je het programma start.
+### Nederlands
+- [Joy-Con Subsysteem](./docs/nl/joycon_nl.md)
+- [Self-Driving Subsysteem](./docs/nl/self_driving_nl.md)
+- [Bluetooth Uitgelegd](./docs/nl/Bluetooth_explained_nl.md)
+- [Bluetooth Protocol](./docs/nl/Bluetooth_protocol_nl.md)
 
 
+## 🏗️ Hardware Varianten
 
-## Discussie
+Het project is onderverdeeld in twee specifieke hardware-implementaties die gebruikmaken van dezelfde software-omgeving.
 
-**Wat werkt al?**
+### 1. Mini RC Car (Hoofdproject)
+Dit is het primaire platform voor de ontwikkeling van de autonome navigatie-algoritmes en firmware-architectuur.
+* **Microcontroller:** PSoC 6 (CY8CKIT-062-WIFI-BT).
+* **Besturing:** Gebruikt FreeRTOS-taken om subsystemen zoals de Joy-con (Bluetooth) en Self-Driving parallel te beheren.
+* **Focus:** Precisie, geavanceerde sensorverwerking en cross-platform compatibiliteit.
 
-- [ ] Hardware ontwerp klaar
-- [ ] PCB geproduceerd
-- [ ] Firmware basis werkt
+### 2. RC_CarT (Large Scale Project)
+Een poging om de firmware te schalen naar een groter, krachtiger onderstel voor zware toepassingen.
+* **Motoren:** 2x My1018 24V DC motoren.
+* **Microcontroller:** PSoC 6 ([CY8CPROTO-062-4343W](./docs/datasheets/infineon-cy8cproto-062-4343w-psoc-6-wi-fi-bt-prototyping-kit-guide-usermanual-en.pdf)) voor consistentie met de ontwikkelomgeving.
+* **Status:** **ON HOLD**. De MD22 motor driver is defect geraakt. Er wordt gekeken naar een industriële upgrade ([Sabertooth 2x32A](./docs/datasheets/Sabertooth2x32.pdf)).
+* **Power:** Maakt gebruik van een DC-converter voor volledige autonomie via de hoofdaccu's.
 
-**Komende stappen**
+---
 
-1. ...
-2. ...
+## 🤖 Subsystemen & Functionaliteit
 
-**Bekende bugs of beperkingen**
+### 🎮 Joy-Con Subsystem (Manual Control)
+Verzorgt de draadloze HID-communicatie en fungeert als de interface voor de gebruiker.
+* **Bluetooth:** Maakt gebruik van de WICED stack onder de naam `PSoC6-JoyConHost`.
+* **Interactie:** Verwerkt knoppen voor rijcommando's en het wisselen tussen modi.
+* **Indicatie:** Een LED op pin `P13_7` geeft de verbindingsstatus aan.
 
-- Link eventueel naar een issue bv. #1
-- ....
+### 🤖 Self-Driving Subsystem (Autonomous Control)
+Een rule-based controller die de auto autonoom laat navigeren.
+* **Obstakelvermijding:** Twee ultrasone sensoren detecteren objecten binnen 25 cm.
+* **Veiligheid:** Een MPU6050 IMU detecteert botsingen (motion interrupts) of het optillen van de auto (Lift Detection via Z-as versnelling).
+* **Feedback:** Wielencoders houden afgelegde afstand en snelheid bij.
+
+---
+
+## 🛠️ Hardware & Pinbezetting (Mini RC Car)
+
+### Mini_Rc_Car (CY8CKIT-062-WIFI-BT)
+
+| Peripheral | Signal | Pin |
+|---|---|---|
+| UART TX (debug) | TX | P5_1 |
+| UART RX (debug) | RX | P5_0 |
+| Motor A | PWM | P10_0 |
+| Motor B | PWM | P10_1 |
+| Motor C | PWM | P10_2 |
+| Motor D | PWM | P10_3 |
+| Ultrasonic Right | Trigger | P9_0 |
+| Ultrasonic Right | Echo | P9_1 |
+| Ultrasonic Left | Trigger | P9_4 |
+| Ultrasonic Left | Echo | P9_5 |
+| IMU SDA | I²C data | P6_1 |
+| IMU SCL | I²C clock | P6_0 |
+| IMU Interrupt | GPIO IRQ | P10_5 |
+| Encoder Right | GPIO IRQ | P9_6 |
+| Encoder Left | GPIO IRQ | P9_7 |
+| Start/Stop SW2 | GPIO input | P0_4 |
+| Status LED | GPIO output | P13_7 |
+
+### Rc_CarT (CY8CPROTO-062-1313W)
+
+| Peripheral | Signal | Pin |
+|---|---|---|
+| Motor A | PWM | P5_4 |
+| Motor B | PWM | P5_5 |
 
 
+---
 
-## Personen
+## 🔋 Batterijbeheer & Veiligheid (RC_CarT)
 
-- Anish Pun [@Anish-Pun](https://github.com/Anish-Pun) (Software)
-- Joel Akem [@jjoellie](https://github.com/jjoellie) (Firmware)
-- Kaelig Guillemette [@guikae06](https://github.com/guikae06) (Hardware)
+Voor de grote wagen gebruiken we **Turnigy 6s 5800mAh (XT90)** batterijen. Correct opladen is cruciaal voor de veiligheid.
+
+### Oplaadinstructies (Accucell 6)
+1. Kies programma: `LiPo BATT` -> `LiPo CHARGE`.
+2. **Voltage:** Handmatig instellen op `22.2V (6S)`.
+3. **Stroomsterkte:** Maximaal 5.0A (advies: **2.0A of 3.0A** voor veiligheid).
+
+> **💡 Extra Tip:** Als de batterij te diep ontladen is (niet herkend), laad deze dan heel kort op via een DC labvoeding op exact 22.2V totdat de Accucell de cellen weer herkent.
+
+---
+
+## ⚙️ Technische Stack
+
+- **Microcontrollers:** PSoC 6 (Proto & WiFi-BT), Arduino Uno (Test).
+- **Motor Drivers:** MD22 (Legacy), Sabertooth 2x32A.
+- **Ontwikkelomgeving:** ModusToolbox™ (Infineon).
+- **Programmeertaal:** C (Embedded).
+- **Sensoren:** HC-SR04 Ultrasoon, MPU6050 IMU.
+
+---
+
+## 🚀 Sequence of Operation
+
+1.  **Power-up:** Verbind via USB of zet de hoofdschakelaar aan.
+2.  **Systeemstatus:** De groene LED licht op bij actieve firmware.
+3.  **Bluetooth:** Zoek en verbind met een Joy-con controller.
+4.  **Runtime:** Wissel tussen **Manual mode** (directe input) en **Self-Driving mode** (autonoom).
+
+---
+
+## 🛠️ Aan de slag
+
+### Prerequisites
+* ModusToolbox™ 3.x geïnstalleerd.
+
+### Project Setup
+1. **Importeer Project:** Open ModusToolbox en importeer de workspace: `AutoKit` (Mini) of `RC_CarT` (Large).
+2. **Build & Flash:** Voer een `Clean` en `Build` uit en gebruik de `Program` tool om de code te uploaden.
+
+---
+
+## 👥 Team
+
+- **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) – *Software Architecture*
+- **Joel Akem** [@jjoellie](https://github.com/jjoellie) – *Firmware Development*
+- **Kaelig Guillemette** [@guikae06](https://github.com/guikae06) – *Hardware Engineering*

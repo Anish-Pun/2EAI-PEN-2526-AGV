@@ -53,7 +53,7 @@ int main(void)
     printf("\033[2J\033[H");
     printf("Main started\r\n");
 
-#if defined(TARGET_APP_CY8CKIT_062_WIFI_BT))
+#if defined(TARGET_APP_CY8CKIT_062_WIFI_BT)
     printf("Detected board: CY8CKIT-062-WIFI-BT -> RC CAR\r\n");
     rc_car_logic_init();
     rc_car_logic_run();

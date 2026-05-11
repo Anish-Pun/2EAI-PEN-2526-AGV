@@ -147,12 +147,13 @@ void self_driving_step(void)
     else if (right < 25.0f)
     {
         snprintf(event_line, sizeof(event_line), "Event: Obstacle RIGHT (%.1f cm) -> turning left", right);
-        motor_turn_left(70);
+        motor_turn_right(70);
+
     }
     else if (left < 25.0f)
     {
         snprintf(event_line, sizeof(event_line), "Event: Obstacle LEFT (%.1f cm) -> turning right", left);
-        motor_turn_right(70);
+        motor_turn_left(70);
     }
     else
     {

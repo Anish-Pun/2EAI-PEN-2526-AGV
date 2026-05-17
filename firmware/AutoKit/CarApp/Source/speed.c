@@ -2,8 +2,8 @@
 #include "pins.h"
 #include "cy_retarget_io.h"
 
-uint32_t Count_EncoderRight = 0;
-uint32_t Count_EncoderLeft  = 0;
+volatile uint32_t Count_EncoderRight = 0;
+volatile uint32_t Count_EncoderLeft  = 0;
 
 static void isr_right(void *arg, cyhal_gpio_event_t event) {
     if (event == CYHAL_GPIO_IRQ_RISE) {
@@ -22,12 +22,12 @@ static cyhal_gpio_callback_data_t cb_left  = {.callback = isr_left,  .callback_a
 
 void speed_init(void) {
     // Right encoder
-    cyhal_gpio_init(ENCODER_RIGHT, CYHAL_GPIO_DIR_INPUT, CYHAL_GPIO_DRIVE_PULL_NONE, false);
+    cyhal_gpio_init(ENCODER_RIGHT, CYHAL_GPIO_DIR_INPUT, CYHAL_GPIO_DRIVE_PULLUP, true);
     cyhal_gpio_register_callback(ENCODER_RIGHT, &cb_right);
     cyhal_gpio_enable_event(ENCODER_RIGHT, CYHAL_GPIO_IRQ_RISE, 3, true);
 
     // Left encoder
-    cyhal_gpio_init(ENCODER_LEFT, CYHAL_GPIO_DIR_INPUT, CYHAL_GPIO_DRIVE_PULL_NONE, false);
+    cyhal_gpio_init(ENCODER_LEFT, CYHAL_GPIO_DIR_INPUT, CYHAL_GPIO_DRIVE_PULLUP, true);
     cyhal_gpio_register_callback(ENCODER_LEFT, &cb_left);
     cyhal_gpio_enable_event(ENCODER_LEFT, CYHAL_GPIO_IRQ_RISE, 3, true);
 

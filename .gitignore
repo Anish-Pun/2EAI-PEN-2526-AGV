@@ -3,6 +3,9 @@ tests/bleuthooth_test/Bluetooth_LE_Hello_Sensor/README.md
 firmware/AutoKit/CarApp/README.md
 .project
 .settings/
+<<<<<<< software
+/firmware/RC_Project1
+=======
 # This list of files to ignore includes common, tool- or user-specific files that
 # are typically not checked into a version control system (VCS). It is a superset
 # of such files. You may want to add others, especially if you use a tool not listed
@@ -155,3 +158,4 @@ ehthumbs_vista.db
 mtb_shared
 firmware/RC_CarT/Bluetooth_RC_Cart/bsps
 firmware/RC_CarT/Bluetooth_RC_Cart/.cache
+>>>>>>> master

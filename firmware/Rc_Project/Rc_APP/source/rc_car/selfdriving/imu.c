@@ -7,12 +7,13 @@ static bool imu_i2c_initialized = false;
 
 // Calibration offsets
 int16_t calib_ax = -950, calib_ay = -300, calib_az = 0;
-int16_t calib_gx = 480,  calib_gy = 170,  calib_gz = 210;
+int16_t calib_gx = 480, calib_gy = 170, calib_gz = 210;
 
 // ISR function (called on motion interrupt)
-void ISR_mpu6050(void *callback_arg, cyhal_gpio_event_t event)
+static void ISR_mpu6050(void *callback_arg, cyhal_gpio_event_t event)
 {
-    // motor_stop();       /* disabled: triggers falsely on startup */
+    (void)callback_arg;
+    (void)event;
     Motion_Detected = true;
 }
 
@@ -87,7 +88,7 @@ cy_rslt_t InitI2C(void)
 void mpu6050_enable_interrupts(void)
 {
     uint8_t buffer[2];
-    uint8_t motion_threshold = 100;
+    uint8_t motion_threshold = 80;
 
     // Reset signal paths
     buffer[0] = 0x68; buffer[1] = 0x07;
@@ -102,8 +103,7 @@ void mpu6050_enable_interrupts(void)
     cyhal_i2c_master_write(&i2c, MPU6050_ADDR, buffer, 2, 10, true);
 
     // Motion threshold
-    buffer[0] = MOT_THRESHOLD;
-    buffer[1] = motion_threshold;  // 8 = very sensitive to slow lifts
+    buffer[0] = MOT_THRESHOLD; buffer[1] = motion_threshold;
     cyhal_i2c_master_write(&i2c, MPU6050_ADDR, buffer, 2, 10, true);
 
     // Motion duration
@@ -156,12 +156,12 @@ void imu_read_all(int16_t *ax, int16_t *ay, int16_t *az,
     if (res != CY_RSLT_SUCCESS) return;
 
     // accel
-    *ax = (int16_t)((data[0]  << 8) | data[1])  - calib_ax;
-    *ay = (int16_t)((data[2]  << 8) | data[3])  - calib_ay;
-    *az = (int16_t)((data[4]  << 8) | data[5])  - calib_az;
+    *ax = (int16_t)((data[0] << 8) | data[1]) - calib_ax;
+    *ay = (int16_t)((data[2] << 8) | data[3]) - calib_ay;
+    *az = (int16_t)((data[4] << 8) | data[5]) - calib_az;
 
     // gyro (bytes 8..13 in the 14-byte burst)
-    *gx = (int16_t)((data[8]  << 8) | data[9])  - calib_gx;
+    *gx = (int16_t)((data[8] << 8) | data[9]) - calib_gx;
     *gy = (int16_t)((data[10] << 8) | data[11]) - calib_gy;
     *gz = (int16_t)((data[12] << 8) | data[13]) - calib_gz;
 }

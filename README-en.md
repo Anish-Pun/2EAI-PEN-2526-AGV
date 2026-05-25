@@ -46,8 +46,8 @@ This is the primary platform for developing autonomous navigation algorithms and
 ### 2. RC_CarT (Large Scale Project)
 An initiative to scale the firmware to a larger, more powerful chassis for heavy-duty applications.
 * **Motors:** 2x My1018 24V DC motors.
-* **Microcontroller:** PSoC 6 (CY8CPROTO-062-4343W) for consistency with the development environment.
-* **Status:** **ON HOLD**. The MD22 motor driver has failed. An industrial upgrade (Sabertooth 2x32A) is being considered.
+* **Microcontroller:** PSoC 6 ([CY8CPROTO-062-4343W](./docs/datasheets/infineon-cy8cproto-062-4343w-psoc-6-wi-fi-bt-prototyping-kit-guide-usermanual-en.pdf)) for consistency with the development environment.
+* **Status:** **ON HOLD**. The MD22 motor driver has failed. An industrial upgrade ([Sabertooth 2x32A](./docs/datasheets/Sabertooth2x32.pdf)) is being considered.
 * **Power:** Uses a DC converter for full autonomy via the main batteries.
 
 ---

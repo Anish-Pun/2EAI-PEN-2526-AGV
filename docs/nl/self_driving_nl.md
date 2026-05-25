@@ -1,84 +1,155 @@
 # Self-Driving Subsystem
 
 ## Overzicht
-Het self-driving subsysteem zorgt voor autonome, obstakelbewuste beweging van de RC-auto op basis van ultrasoon afstandsmeting, een MPU6050-gebaseerde IMU en wielencoder-feedback. Het is één van de twee runtime modes van de RC-auto, naast Bluetooth/manuele bediening.
+Het self-driving subsysteem zorgt voor autonome, obstakelbewuste beweging van de RC-auto op basis van ultrasone afstandsmeting, een MPU6050-gebaseerde IMU en wielencoder-feedback. Het is één van de twee runtime-modi van de RC-auto, naast Bluetooth/handmatige bediening.
 
 ## Doel
-Dit document legt uit hoe self-driving mode wordt geïnitialiseerd, welke modules gebruikt worden, hoe `self_driving_step()` beslissingen neemt en welke veiligheidsvoorwaarden het voertuig doen stoppen. De focus ligt op het gedrag dat effectief in de firmware geïmplementeerd is.
+Dit document legt uit hoe self-driving mode wordt geïnitialiseerd, welke modules het gebruikt, hoe `self_driving_step()` bewegingsbeslissingen neemt en welke veiligheidsvoorwaarden het voertuig doen stoppen. Het richt zich op het geïmplementeerde gedrag in de firmware in plaats van geplande autonome functies.
 
-## Plaats in runtime
-De firmware activeert self-driving mode via `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)`. Bij de eerste overgang naar deze mode initialiseert `rc_car_logic.c` de ultrasonic-sensoren, de IMU-module en de speedmodule, roept daarna `self_driving_enter()` aan en zet vervolgens de globale mode op self-driving.
+## Runtime-positie
+De firmware gaat naar self-driving mode via `rc_car_logic_set_mode(RC_CAR_MODE_SELF_DRIVING)`. Bij de eerste overgang naar deze mode initialiseert `rc_car_logic.c` de ultrasone sensoren, IMU-module en speedmodule lazy (alleen bij eerste keer), roept dan `self_driving_enter()` aan en schakelt de globale modus naar self-driving. Sensoren worden slechts één keer geïnitialiseerd — latere moduswissels hergebruiken de reeds geïnitialiseerde randapparatuur.
 
-## Belangrijkste modules
-Het self-driving subsysteem bestaat uit vier hoofdmodules.
+## Hoofdmodules
+Het self-driving subsysteem bestaat uit vier hoofdbrondbestanden.
 
-- `self_driving.c` bevat de hoog-niveau autonome regellus en de rijbeslissingen.
-- `ultrasonic.c` meet obstakelafstanden aan de linker- en rechterzijde.
-- `imu.c` initialiseert de MPU6050, activeert motion interrupts en leest accelerometer- en gyroscoopdata uit.
-- `speed.c` telt encoderpulsen van de wielen en leidt hieruit afstandsgebaseerde snelheidswaarden af voor links en rechts.
+- `self_driving.c` bevat de hoog-niveau autonome regellus, bewegingsbeslissingen, IMU-basisdetectie en halt-statusbeheer.
+- `ultrasonic.c` meet obstakelafstanden aan de linker- en rechterzijde met HC-SR04-sensoren.
+- `imu.c` initialiseert de MPU6050, activeert motion-interrupts en leest accelerometer- en gyroscoopdata uit.
+- `speed.c` telt wielencoder-pulsen en leidt hieruit afstandsgebaseerde snelheidsschattingen af voor links en rechts.
 
 ## Ingangspunten
-De API van de self-driving regeling bestaat uit `self_driving_enter()`, `self_driving_exit()`, `self_driving_step()` en `self_driving_is_halted()`. `self_driving_enter()` bereidt het subsysteem voor op autonoom rijden, `self_driving_exit()` stopt de beweging en reset de halt-status, en `self_driving_step()` voert één volledige meet- en besliscyclus uit.
 
-## Gedrag bij starten en stoppen
-Wanneer self-driving mode start, wist `self_driving_enter()` de waarde van `Motion_Detected`, reset het de wielencoders, wist interne halt-flags, print een modemelding en laat de motoren vooruit rijden met waarde 65. Wanneer de mode verlaten wordt, stopt `self_driving_exit()` de motoren, wist de halt-flags en print een exitmelding.
+| Functie | Beschrijving |
+|---|---|
+| `self_driving_enter()` | Reset status, legt IMU-baseline vast, start voorwaartse beweging |
+| `self_driving_exit()` | Stopt motoren, wist alle statusvlaggen |
+| `self_driving_step()` | Eén volledige meet-beslis-handel cyclus, elke 50 ms aangeroepen |
+| `self_driving_is_halted()` | Geeft `true` terug wanneer de auto in persistente halt-status is |
+
+## Startgedrag
+Wanneer self-driving mode start, voert `self_driving_enter()` het volgende uit:
+- Wist `Motion_Detected` en reset wielencoders
+- Reset alle halt-vlaggen en debounce-tellers
+- Legt een live IMU-meting vast als **baseline** (`base_ax`, `base_ay`, `base_az`) — later gebruikt om lift te detecteren ten opzichte van de werkelijke startoriëntatie van de auto
+- Wist de terminal en drukt de statuskoptekst af
+- Stuurt motoren vooruit met 65%
+
+## Stopgedrag
+`self_driving_exit()` stopt de motoren, wist halt-vlaggen en debounce-tellers, en drukt een exitmelding af.
 
 ## Regellus
-`self_driving_step()` wordt herhaaldelijk aangeroepen vanuit de RC-car task zolang de globale mode self-driving is. In elke cyclus controleert de functie eerst of het subsysteem gehalt is, leest daarna IMU-waarden, leest linker- en rechterafstand, leest encoder-gebaseerde snelheidswaarden, print een geformatteerde statuslijn, evalueert veiligheidsvoorwaarden en beslist vervolgens of de auto moet stoppen, draaien of vooruitrijden.
+`self_driving_step()` wordt herhaaldelijk aangeroepen vanuit de RC-car FreeRTOS-task zolang de globale modus self-driving is. Elke cyclus:
+
+1. Leest IMU uit (ax, ay, az, gx, gy, gz)
+2. Leest linker- en rechter ultrasone afstanden
+3. Leest encoder-gebaseerde snelheidswaarden
+4. Werkt terminalweergave bij (regels 2, 3, 4 op hun plaats — geen scrollen)
+5. Controleert halt-status
+6. Evalueert IMU-lift/crash-detectie
+7. Evalueert obstakellogica
+8. Geeft motorcommando
+9. Wacht 50 ms
+
+## Terminaluitvoer
+Het subsysteem schrijft drie vaste regels naar de terminal met ANSI-escape-codes, die elke cyclus op hun plaats worden overschreven zonder scrollen:
+
+| Regel | Inhoud |
+|---|---|
+| Regel 2 | Sensorstatus: afstanden, snelheden, encodertellingen, IMU-assen, motion-vlag |
+| Regel 3 | Laatste eventmelding (obstakel, lift, halt, vrije baan) |
+| Regel 4 | Volledige IMU-uitlezing inclusief gyro- en baseline-vergelijking |
+
+## IMU-lift- en crashdetectie
+In plaats van een vaste absolute drempel te gebruiken, vergelijkt `self_driving_step()` elke IMU-meting met de **bij opstart vastgelegde baseline** via delta-waarden:
+
+```
+dAX = ax - base_ax
+dAY = ay - base_ay
+dAZ = az - base_az
+```
+
+Als `|dAX| > 3000` of `|dAY| > 3000` of `|dAZ| > 2500`, wordt een debounce-teller (`imu_counter`) verhoogd. De teller moet **3 opeenvolgende detecties** bereiken voordat de auto stopt. Dit voorkomt fout-positieven door een enkele hobbel terwijl echte lifts en crashes nog worden opgevangen. De teller wordt teruggezet naar 0 zodra waarden weer normaal zijn.
+
+Bij activering gaat de auto in `halted_until_restart` met een eventmelding die de delta-waarden toont. De interrupt-gebaseerde `Motion_Detected`-vlag wordt elke cyclus gewist omdat deze op deze hardware-opstelling fout-positieven veroorzaakte — in plaats daarvan wordt de baseline-delta-methode gebruikt.
+
+## Halt-status
+`halted_until_restart` is een persistente vlag die wordt gezet door zowel obstakel- als IMU-detectie. Zolang deze actief is:
+- Motoren worden elke cyclus gestopt
+- De halt-eventmelding wordt één keer afgedrukt
+- De step-functie keert onmiddellijk terug zonder navigatielogica uit te voeren
+- De vlag wordt alleen gewist door `self_driving_enter()` of `self_driving_exit()`
+
+De X-knop op de Joy-Con (`btn0 = 0x02`) roept `self_driving_enter()` direct aan wanneer de auto gestopt is, waardoor de autonome werking wordt herstart zonder van modus te wisselen.
 
 ## Obstakelafhandeling
-De obstakellogica gebruikt twee ultrasone metingen, één rechts en één links. Als beide gemeten afstanden kleiner zijn dan 20 cm, stopt het voertuig, gaat het in een halt-status en blijft het stilstaan tot een herstartconditie deze toestand opheft. Als alleen rechts geblokkeerd is, draait de auto links met commando 80, en als alleen links geblokkeerd is, draait de auto rechts met dezelfde waarde. Als geen van beide zijden onder de drempel ligt, blijft de auto vooruit rijden met commando 65.
 
-## Halt-gedrag
-Het self-driving subsysteem bewaart een persistente halt-status via `halted_until_restart`. Terwijl deze toestand actief is, dwingt `self_driving_step()` de motoren om te stoppen, print het éénmalig een haltmelding, wacht het 50 ms en keert het terug zonder de normale navigatielogica uit te voeren. De helper `self_driving_is_halted()` maakt deze status ook beschikbaar voor andere code.
+| Conditie | Actie |
+|---|---|
+| Beide sensoren < 18 cm | `motor_stop()`, ga naar `halted_until_restart` |
+| Rechter sensor < 25 cm | `motor_turn_left(70)` |
+| Linker sensor < 25 cm | `motor_turn_right(70)` |
+| Beide vrij | `motor_forward(80)` |
 
-## IMU-veiligheidsgedrag
-De IMU-laag gebruikt een MPU6050 die via I2C verbonden is met `IMU_SDA` op `P6_1`, `IMU_SCL` op `P6_0` en een interruptlijn op `P10_5`. Tijdens de initialisatie maakt de code de MPU6050 actief, controleert de `WHO_AM_I`-registerwaarde tegen de verwachte waarde `0x68` en activeert daarna motion-detection interrupts. Wanneer een motion interrupt optreedt, stopt de ISR de motoren en zet `Motion_Detected` op true, waardoor `self_driving_step()` in de volgende cyclus een noodstop uitvoert.
-
-## Lift detection
-Naast de interrupt-gebaseerde stop controleert de regellus ook de Z-asversnelling `az` na elke IMU-uitlezing. Als `az` kleiner is dan 8000, behandelt de code dit als een liftsituatie, stopt de motoren en print een lift-detected melding. Dit vormt een tweede veiligheidsmechanisme tegen het optillen of onverwacht kantelen van de auto.
+De halt-drempel (18 cm) is smaller dan de draaidrempel (25 cm), wat een reactiezone geeft vóór volledige stop.
 
 ## Ultrasone meting
-De ultrasonic-module gebruikt twee trigger- en echo-paren: rechter trigger `P9_0` met rechter echo `P9_1`, en linker trigger `P9_4` met linker echo `P9_5`. Elke meting stuurt een korte triggerpuls, meet hoe lang de echolijn hoog blijft en zet deze pulstijd om naar centimeters via de berekening in de driver. Als de wachttijd of pulsbreedte de timeout overschrijdt, retourneert de driver een grote fallbackafstand van 1000 cm.
+De ultrasone module gebruikt twee trigger/echo-paren:
 
-## Snelheidsbepaling
-De speedmodule gebruikt wielencoder-ingangen op `P9_6` en `P9_7`. Rising-edge GPIO interrupts verhogen `Count_EncoderRight` en `Count_EncoderLeft`, en de gerapporteerde waarden worden afgeleid uit deze tellers via `COUNTS_PER_METER` met waarde `235.0`. De functies `get_speed_right_kmh()` en `get_speed_left_kmh()` zetten geaccumuleerde afstand om naar km/h, maar in de huidige code wordt niet gedeeld door verstreken tijd, waardoor deze waarden eerder afstandsgebaseerde indicatoren zijn dan echte tijdgenormaliseerde snelheidsmetingen.
+| Sensor | Trigger | Echo |
+|---|---|---|
+| Rechts | P9_0 | P9_1 |
+| Links | P9_4 | P9_5 |
 
-## Interactie met de motorlaag
-Het self-driving subsysteem vertrouwt op de gemeenschappelijke motorlaag om beslissingen uit te voeren. `motor_forward()` activeert alle vier PWM-uitgangen, `motor_stop()` zet alle duty cycles op nul, `motor_turn_left()` activeert enkel motoren A en C, en `motor_turn_right()` activeert enkel motoren B en D. De motorpinnen zijn in `pins.h` toegewezen aan `P10_0` tot en met `P10_3`.
+Elke meting stuurt een 10 µs triggerpuls, meet de echopulsduur in microseconden en converteert naar centimeters via `duur × 0.0343 / 2`. Beide trigger-pinnen worden laag gehouden en krijgen 100 ms om te stabiliseren na `ultrasonic_init()`. Als de wachttijd of pulsbreedte 20 000 µs overschrijdt, geeft de driver 1000 cm terug (behandeld als vrije baan).
 
-## Logging en diagnose
-`self_driving_step()` bouwt en print een live statuslijn met rechter- en linkerafstand, rechter- en linkersnelheid, encodertellers, accelerometerwaarden en de `Motion_Detected`-flag. Dit geeft tijdens debugging en testen een bruikbaar realtime beeld van de autonome toestand.
+## Snelheidsschatting
+De speedmodule gebruikt wielencoders op P9_6 (rechts) en P9_7 (links). Rising-edge GPIO-interrupts verhogen `Count_EncoderRight` en `Count_EncoderLeft`. Snelheid wordt afgeleid als:
+
+```
+afstand_m = aantal / 235.0
+snelheid_kmh = afstand_m × 3.6
+```
+
+Dit geeft cumulatieve afstand sinds de laatste `reset_encoders()`-aanroep uitgedrukt als een km/h-equivalent, niet als momentane snelheid. Encoders worden elke keer gereset wanneer `self_driving_enter()` wordt aangeroepen.
+
+## Motorinteractie
+Het self-driving subsysteem gebruikt de gemeenschappelijke motorlaag:
+
+| Functie | Effect |
+|---|---|
+| `motor_forward(80)` | Alle 4 wielen vooruit met 80% |
+| `motor_turn_left(70)` | Wiel A+C op 70%, B+D gestopt |
+| `motor_turn_right(70)` | Wiel B+D op 70%, A+C gestopt |
+| `motor_stop()` | Alle 4 wielen op 0% |
+
+`motor_forward()` bevat een soft-start-ramp van 20% omhoog in stappen van 5% met 20 ms ertussen, waardoor inschakelstroompieken worden voorkomen wanneer alle 4 motoren tegelijk starten op AA-batterijvoeding.
 
 ## Ondersteunde functionaliteit
-De huidige implementatie ondersteunt autonoom vooruitrijden, obstakelvermijding met linker- en rechter ultrasoonsensoren, noodstop bij motion interrupt, lift detection via de Z-asdrempel, encodertelling, mode entry en exit, en een persistente halt-toestand wanneer beide zijden geblokkeerd zijn. Het subsysteem is nauw gekoppeld aan de RC car mode manager zodat het alleen actief is wanneer self-driving mode geselecteerd is.
+Autonoom vooruitrijden, obstakelvermijding links en rechts, baseline-relatieve IMU-lift- en crashdetectie met 3-cyclus debounce, terminaldiagnostiek op 3 regels op hun plaats, persistente halt-status met X-knop herstart, encoder-telling, mode-entry en -exit.
 
 ## Beperkingen
-De huidige implementatie gebruikt een eenvoudige rule-based controller en geen path planning, mapping of sensor fusion. Er is geen routegeheugen, geen doellogica, geen geleidelijke snelheidsregeling en geen aanwijzing van PID-gebaseerde stuurregeling of closed-loop velocity control in de aangeleverde code. De gerapporteerde snelheidsfuncties berekenen bovendien geen snelheid over tijd, wat hun nauwkeurigheid als fysieke snelheidsmeting beperkt.
+Eenvoudige rule-based controller zonder padplanning, kartering of sensorfusie. Geen PID-gebaseerde sturing of closed-loop snelheidsregeling. Snelheidsfuncties meten cumulatieve afstand in plaats van momentane snelheid. De interrupt-gebaseerde IMU-bewegingsvlag is uitgeschakeld vanwege ruis op deze opstelling — baseline-delta-detectie wordt in plaats daarvan gebruikt.
 
 ## Self-driving flow
 ```mermaid
 flowchart TD
-    A[rc_car_logic_set_mode SELF_DRIVING] --> B[ultrasonic_init]
-    A --> C[imu_init]
-    A --> D[speed_init]
-    A --> E[self_driving_enter]
-    E --> F[self_driving_step loop]
-    F --> G{Halted_until_restart?}
-    G -- Yes --> H[Stop and return]
-    G -- No --> I[Lees IMU-waarden]
-    I --> J[Lees linker- en rechterafstand]
-    J --> K[Lees encoder-gebaseerde snelheid]
-    K --> L[Print statusregel]
-    L --> M{Motion_Detected?}
-    M -- Yes --> N[Noodstop]
-    M -- No --> O{az < 8000?}
-    O -- Yes --> P[Lift stop]
-    O -- No --> Q{Beide afstanden < 20 cm?}
-    Q -- Yes --> R[Zet halted_until_restart]
-    Q -- No --> S{Rechts < 20 cm?}
-    S -- Yes --> T[Links draaien]
-    S -- No --> U{Links < 20 cm?}
-    U -- Yes --> V[Rechts draaien]
-    U -- No --> W[Vooruit rijden]
+    A[rc_car_logic_set_mode SELF_DRIVING] --> B{Eerste keer?}
+    B -- Ja --> C[ultrasonic_init / imu_init / speed_init]
+    B -- Nee --> D[self_driving_enter]
+    C --> D
+    D --> E[Leg IMU baseline vast]
+    E --> F[motor_forward 65]
+    F --> G[self_driving_step loop elke 50ms]
+    G --> I[Lees IMU + afstanden + snelheid]
+    I --> J{halted_until_restart?}
+    J -- Ja --> K[motor_stop, return]
+    J -- Nee --> L{IMU delta > drempel x3?}
+    L -- Ja --> M[Halt: LIFT DETECTED]
+    L -- Nee --> N{Beide sensoren < 18cm?}
+    N -- Ja --> O[Halt: BOTH OBSTACLES]
+    N -- Nee --> P{Rechts < 25cm?}
+    P -- Ja --> Q[motor_turn_left 70]
+    P -- Nee --> R{Links < 25cm?}
+    R -- Ja --> S[motor_turn_right 70]
+    R -- Nee --> T[motor_forward 80]
 ```

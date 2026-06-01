@@ -129,9 +129,9 @@ De auto stopt ook automatisch als de IMU een botsing of optillen detecteert. Dru
 ## 8. Gerelateerde documentatie
 
 - [Hoofd-README](../README.md)
-- (momenteen staat er niet bij )[RC Car Firmware (Anish)](../firmware/Rc_Project/RC_Car_README.md)
+- RC Car Firmware (Anish) — `firmware/Rc_Project/RC_Car_README.md` *(nog toe te voegen)*
 - [RC Cart Firmware (Kaelig)](../firmware/RC_Cart/README.md)
--  (momenteen staat er niet bij )[RC Car 2 Firmware (Joel)](../firmware/Rc_Project2/README.md)
+- RC Car 2 Firmware (Joel) — `firmware/Rc_Project2/README.md` *(nog toe te voegen door Joel)*
 - [Hardware Overzicht](../hardware/README.md)
 - [Joy-Con Subsysteem](en/joycon_en.md)
 - [Self-Driving Subsysteem](en/self_driving_en.md)

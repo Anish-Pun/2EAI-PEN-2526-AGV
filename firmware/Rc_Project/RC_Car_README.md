@@ -1,25 +1,25 @@
-# RC Car – Firmware Documentation (`Rc_Project`)
+# RC Car – Firmware (`Rc_Project`)
 
-> **Platform:** CY8CKIT-062-WIFI-BT (PSoC 6)
-> **Author:** Anish
-> **Part of:** AGV Project — 2EAI-PEN-2526 — PXL Hogeschool
+**Platform:** CY8CKIT-062-WIFI-BT (PSoC 6)  
+**Author:** Anish  
+**Part of:** AGV Project — 2EAI-PEN-2526 — PXL Hogeschool
 
 ---
 
-## 📖 Overview
+## Overview
 
-This is the firmware for the **4-wheel RC Car** — my part of the AGV project. The car runs on a **PSoC 6 microcontroller** and supports two operating modes:
+Firmware for the 4-wheel RC Car, built on a PSoC 6 microcontroller. The car supports two operating modes:
 
-- **Manual (Bluetooth) Mode** — controlled wirelessly via a Nintendo Joy-Con controller
+- **Manual Mode** — wireless control via a Nintendo Joy-Con over classic Bluetooth
 - **Self-Driving Mode** — autonomous obstacle avoidance using ultrasonic sensors, with IMU-based safety detection
 
-The firmware is built with **ModusToolbox** and uses **FreeRTOS** to manage tasks concurrently.
+Built with ModusToolbox, using FreeRTOS for concurrent task management.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 Rc_Project/
 └── Rc_APP/
     ├── Makefile
@@ -33,29 +33,26 @@ Rc_Project/
         └── rc_car/
             ├── rc_car_logic.c / .h       # Mode switching, FreeRTOS task
             ├── joycon/
-            │   ├── joycon_classic.c / .h         # BT HID connection to Joy-Con
-            │   ├── joycon_drive_logic.c / .h     # Hat input → motor commands
-            │   └── joycon_status_led.c / .h      # LED status indicator
+            │   ├── joycon_classic.c / .h        # BT HID connection to Joy-Con
+            │   ├── joycon_drive_logic.c / .h    # Hat input → motor commands
+            │   └── joycon_status_led.c / .h     # LED status indicator
             └── selfdriving/
-                ├── self_driving.c / .h           # Autonomous navigation logic
-                ├── ultrasonic.c / .h             # HC-SR04 distance sensing
-                ├── imu.c / .h                    # MPU6050 accelerometer/gyro
-                └── speed.c / .h                  # Wheel encoder speed tracking
+                ├── self_driving.c / .h          # Autonomous navigation logic
+                ├── ultrasonic.c / .h            # HC-SR04 distance sensing
+                ├── imu.c / .h                   # MPU6050 accelerometer/gyro
+                └── speed.c / .h                 # Wheel encoder speed tracking
 ```
 
 ---
 
-## ⚙️ Operating Modes
+## Operating Modes
 
-### 🎮 Manual Mode (Bluetooth / Joy-Con)
+### Manual Mode (Bluetooth / Joy-Con)
 
-The car connects to a **Nintendo Joy-Con** over classic Bluetooth (BR/EDR HID).
-
-- The firmware scans for a Joy-Con by name (`Joy-Con (L)` or `Joy-Con (R)`)
-- Once connected, the **D-pad (hat switch)** drives the car:
+The firmware scans for a Joy-Con by name (`Joy-Con (L)` or `Joy-Con (R)`) over classic Bluetooth (BR/EDR HID). Once connected, the D-pad controls the car:
 
 | Hat Input | Action |
-|---|---|
+|-----------|--------|
 | UP | Forward |
 | LEFT / UP-LEFT | Turn Left |
 | RIGHT / UP-RIGHT | Turn Right |
@@ -64,45 +61,43 @@ The car connects to a **Nintendo Joy-Con** over classic Bluetooth (BR/EDR HID).
 **Button mappings:**
 
 | Button (btn0 bitmask) | Action |
-|---|---|
-| `0x08` | Switch to **Self-Driving** mode |
-| `0x04` | Switch back to **Manual** mode |
-| `0x02` (X) | Restart self-driving if halted |
+|-----------------------|--------|
+| `0x08` | Switch to Self-Driving mode |
+| `0x04` | Switch back to Manual mode |
+| `0x02` | Restart self-driving if halted |
 
 **Status LED (P13_7):**
 
 | State | LED |
-|---|---|
+|--------|-----|
 | Searching / Connecting | Blinking |
 | Connected + input received | Solid ON |
 
 ---
 
-### 🤖 Self-Driving Mode
+### Self-Driving Mode
 
-An autonomous rule-based controller that avoids obstacles in real time.
-
-**Logic (runs every 50 ms):**
+A rule-based autonomous controller that runs every 50 ms and reacts to sensor input in real time.
 
 | Sensor Reading | Action |
-|---|---|
-| Both sensors < 18 cm | **STOP** (full halt) |
-| Right sensor < 25 cm | Turn right (avoid left obstacle) |
-| Left sensor < 25 cm | Turn left (avoid right obstacle) |
-| Both clear | Drive forward at 80% speed |
+|----------------|--------|
+| Both sensors < 18 cm | Stop (full halt) |
+| Right sensor < 25 cm | Turn left (away from right obstacle) |
+| Left sensor < 25 cm | Turn right (away from left obstacle) |
+| Both clear | Drive forward at 80% PWM |
 
 **Safety features:**
 
-- **IMU Lift Detection** — if the car is picked up or crashes, the MPU6050 detects anomalous acceleration. After 6 consecutive anomaly cycles, the car stops and waits for the X button to restart.
-- **Startup Ignore Window** — the first 20 self-driving cycles ignore IMU readings to avoid false triggers on launch.
-- **Baseline Calibration** — when self-driving starts, 16 IMU samples are averaged to establish a rest baseline.
+- **IMU Lift Detection** — the MPU6050 detects anomalous acceleration when the car is picked up or crashes. After 6 consecutive anomaly cycles the car halts and waits for a manual restart.
+- **Startup Ignore Window** — the first 20 step-cycles after entering self-driving mode are ignored to allow the motors to spin up without triggering false positives.
+- **Baseline Calibration** — 16 IMU samples are averaged at startup to establish a resting baseline for anomaly detection.
 
 ---
 
-## 🔌 Pin Assignment (CY8CKIT-062-WIFI-BT)
+## Pin Assignment
 
 | Peripheral | Signal | Pin |
-|---|---|---|
+|------------|---------|-----|
 | UART TX (debug) | TX | P5_1 |
 | UART RX (debug) | RX | P5_0 |
 | Motor A | PWM | P10_0 |
@@ -121,37 +116,39 @@ An autonomous rule-based controller that avoids obstacles in real time.
 | Start/Stop (SW2) | GPIO Input | P0_4 |
 | Status LED | GPIO Output | P13_7 |
 
+> **Note:** The HC-SR04 ECHO pins output 5V. A voltage divider (1 kΩ / 2 kΩ) is required on each ECHO line to bring the signal down to 3.3V before connecting to the PSoC GPIO.
+
 ---
 
-## 🧠 Firmware Architecture
+## Firmware Architecture
 
-The firmware starts in `main.c`, detects the board type at compile time, and calls `rc_car_logic_init()` + `rc_car_logic_run()`.
+The firmware starts in `main.c`, detects the board at compile time, and calls `rc_car_logic_init()` followed by `rc_car_logic_run()`.
 
-`rc_car_logic_run()` creates a **FreeRTOS task** (`app_task`) that runs the main loop:
+`rc_car_logic_run()` creates a single FreeRTOS task (`app_task`, priority 5, stack 4096) that runs the main loop:
 
-```
-app_task (FreeRTOS, priority 5, stack 4096)
+```text
+app_task
 │
-├── motor_init()                 // Initialize 4x PWM channels
-├── joycon_status_led_init()     // LED setup
-├── joycon_classic_init()        // Start Bluetooth stack (WICED)
+├── motor_init()
+├── joycon_status_led_init()
+├── joycon_classic_init()
 │
 └── loop:
-    ├── joycon_classic_process() // BT keepalive + input polling
-    ├── joycon_status_led_process() // Blink LED while connecting
+    ├── joycon_classic_process()
+    ├── joycon_status_led_process()
     └── if SELF_DRIVING:
-        └── self_driving_step()  // Sensor read + motor decision
+        └── self_driving_step()
 ```
 
-**Mode switching** is handled by `rc_car_logic_set_mode()`. Switching to self-driving initializes the ultrasonic, IMU, and encoder subsystems (only once) and calls `self_driving_enter()`.
+Mode switching is handled by `rc_car_logic_set_mode()`. Switching to self-driving initializes the ultrasonic, IMU, and encoder subsystems once and calls `self_driving_enter()`.
 
 ---
 
-## 📡 Bluetooth Stack Details
+## Bluetooth Stack
 
-The Bluetooth layer is built on the **WICED BT stack** (`wiced_bt_*` APIs). The full connection flow is:
+Built on the WICED BT stack (`wiced_bt_*` APIs). Connection flow:
 
-```
+```text
 BT enabled
   → Inquiry (scan for Joy-Con by name or HID UUID)
   → SDP (service discovery)
@@ -161,40 +158,41 @@ BT enabled
   → Input reports received → drive logic applied
 ```
 
-The device advertises as `PSoC6-JoyConHost`. A keepalive subcommand is sent every 100 ticks to maintain the HID connection.
+The board advertises as `PSoC6-JoyConHost`. A keepalive subcommand is sent every 100 ticks to maintain the HID connection.
 
 ---
 
-## 📏 Sensor Details
+## Sensor Details
 
 ### HC-SR04 Ultrasonic (×2)
 
-- 3 readings taken per measurement cycle with 20 ms between each
-- **Median** of the 3 readings is used (removes spikes)
-- Returns `1000.0 cm` if all readings time out (no obstacle detected)
-- Detection threshold: **25 cm** (turn), **18 cm** (stop)
+- 3 readings per cycle with 20 ms between each
+- Median of the 3 values is used to filter out spikes
+- Returns `1000.0 cm` if all readings time out (no obstacle in range)
+- Thresholds: 25 cm triggers a turn, 18 cm triggers a full stop
 
 ### MPU6050 IMU
 
-- Connected via I²C at 400 kHz on pins P6_0/P6_1
-- `WHO_AM_I` register checked on init (expected: `0x68`)
-- Motion interrupt enabled with threshold = 80 and duration = 10
+- I²C at 400 kHz on P6_0 / P6_1
+- `WHO_AM_I` register verified on init (expected: `0x68`)
+- Motion interrupt: threshold = 80, duration = 10
 - Calibration offsets applied at read time:
   - `ax -= -950`, `ay -= -300`, `az -= 0`
   - `gx -= 480`, `gy -= 170`, `gz -= 210`
-- A low-pass filter (α = 0.20) smooths accelerometer data in self-driving
+- Low-pass filter (α = 0.20) applied to accelerometer data during self-driving
 
 ### Speed Encoders
 
-- Two hall-effect encoders on P9_6 (right) and P9_7 (left)
+- Hall-effect encoders on P9_6 (right) and P9_7 (left)
 - Rising-edge interrupt increments a counter per wheel
-- Speed calculated as: `(count / COUNTS_PER_METER) × 3.6` → km/h
+- Speed formula: `(count / COUNTS_PER_METER) × 3.6` → km/h
 - Counters reset on each `self_driving_enter()` call
+
 ---
 
-## 🔗 Related Documentation
+## Related Documentation
 
 - [Main Project README](../../README.md)
-- [Joy-Con Subsystem (EN)](../../docs/en/joycon_en.md)
-- [Self-Driving Subsystem (EN)](../../docs/en/self_driving_en.md)
-- [Bluetooth Explained (EN)](../../docs/en/Bluetooth_explained_en.md)
+- [Joy-Con Subsystem](../../docs/en/joycon_en.md)
+- [Self-Driving Subsystem](../../docs/en/self_driving_en.md)
+- [Bluetooth Explained](../../docs/en/Bluetooth_explained_en.md)

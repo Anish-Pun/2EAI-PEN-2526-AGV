@@ -15,9 +15,11 @@ Dit document bevat de definitieve hardwareconfiguratie, pin-toewijzungen, kritie
 | **Ultrasoon Sensor** | HC-SR04 | Afstandsmeting & Obstakeldetectie | [HCSR04.pdf](/docs/datasheets/HCSR04.pdf) | 2 | Mini RC Car |
 | **Line Tracker** | KY-033 | Infrarood Lijnvolging | [KY-033.pdf](/docs/datasheets/p587610-KY-033-Joy-IT.pdf) | 2 | Mini RC Car |
 | **Motor Driver (Mini)**| L298N | Dual H-Bridge Motor Driver | [L298N_Motor_Driver.pdf](/docs/datasheets/L298N_Motor_Driver.pdf) | 1 | Mini RC Car |
+| **Motor Driver (Mini Alt.)** | L9110S | Dual H-Bridge Motor Driver | [L9110S_motor_driver.pdf](/docs/datasheets/L9110S_motor_driver.pdf) | 1 | Mini RC Car |
 | **Motor Driver (AGV)** | Devantech MD22 | 24V 50A Dual H-Bridge Driver | [MD22_Doc.pdf](/docs/datasheets/MD22_TechnicalDocumentation.pdf) | 1 | RC Cart (AGV) |
 | **DC-DC Converter** | SBC-BUCK01 | Step-down spanningstabilisatie logica AGV | [SBCBUCK01.pdf](/docs/datasheets/SBCBUCK01.pdf) | 1 | RC Cart (AGV) |
 | **Accu Lader** | Turnigy Accucell 6 | Balanceer lader voor accupacks | [Accucell_6.pdf](/docs/datasheets/Accucell_6.pdf) | 1 | Ondersteuning |
+| **Snelheidssensor** | SEN-SPEED | Hall-effect encoder voor wielsnelheid | [SEN-SPEED.pdf](/docs/datasheets/SEN-SPEED.pdf) | 2 | Mini RC Car |
 | **DC Motor (AGV)** | MY1018 | 24V Aandrijving met vertraging | *Geen (zie MD22 spec)* | 2 | RC Cart (AGV) |
 | **DC Motor (Mini)** | Standaard DC | 6V Aandrijving wielen | *N.v.t.* | 4 | Mini RC Car |
 | **Draadloze Controller**| Joy-Con / DualShock| Handmatige HID-besturing via BT | *N.v.t.* | 1 | Beide |

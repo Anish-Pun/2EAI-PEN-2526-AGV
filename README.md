@@ -8,146 +8,64 @@ Het **AGV_RCCar** project is een geavanceerd embedded systeem dat RC-voertuigen 
 - **Manuele Modus:** Real-time besturing via een draadloze Bluetooth-verbinding (Joy-con).
 - **Autonome Modus:** Zelfstandige navigatie met behulp van ultrasone sensoren om actief obstakels te vermijding.
 
-De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hierdoor kunnen verschillende hardware-onderstellen (zoals de Mini en de Large variant) aangestuurd worden met een uniforme logische basis.
+De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hierdoor kunnen verschillende hardware-onderstellen aangestuurd worden met een uniforme logische basis.
+
+
+Zie [`docs/AN_AGV.pdf`](./docs/AN_AGV.pdf) voor de volledige application note.
 
 ---
 
-## Documentatie
+## 📚 Documentatie
 
-Gedetailleerde documentatie is te vinden in de [docs](./docs/) folder:
+| Onderwerp | Lees meer |
+|-----------|-----------|
+| **Hardware** (BOM, pinbezetting, schema's) | [`hardware/README.md`](./hardware/README.md) |
+| **Firmware — RC Car** (Anish) | [`firmware/Rc_Project/RC_Car_README.md`](./firmware/Rc_Project/RC_Car_README.md) |
+| **Firmware — RC Cart** (Kaelig) | [`firmware/RC_CarT/Bluetooth_RC_Cart/`](./firmware/RC_CarT/Bluetooth_RC_Cart/) |
+| **Tests** (projecten per subsystem) | [`tests/README.md`](./tests/README.md) |
+| **Design Document** | [`docs/design.md`](./docs/design.md) |
+| **User Manual** | [`docs/user-manual.md`](./docs/user-manual.md) |
+| **Joy-Con Subsysteem** | [`docs/nl/joycon_nl.md`](./docs/nl/joycon_nl.md) |
+| **Self-Driving Subsysteem** | [`docs/nl/self_driving_nl.md`](./docs/nl/self_driving_nl.md) |
+| **Bluetooth Uitgelegd** | [`docs/nl/Bluetooth_explained_nl.md`](./docs/nl/Bluetooth_explained_nl.md) |
+| **Bluetooth Protocol** | [`docs/nl/Bluetooth_protocol_nl.md`](./docs/nl/Bluetooth_protocol_nl.md) |
 
-### Algemeen
-- [Design Document](./docs/design.md)
+> English documentation is available in [`README-en.md`](./README-en.md).
 
-- [User Manual](./docs/user-manual.md)
-
-### English
-- [Joy-Con Subsystem](./docs/en/joycon_en.md)
-- [Self-Driving Subsystem](./docs/en/self_driving_en.md)
-- [Bluetooth Explained](./docs/en/Bluetooth_explained_en.md)
-- [Bluetooth Protocol](./docs/en/Bluetooth_protocol_en.md)
-
-### Nederlands
-- [Joy-Con Subsysteem](./docs/nl/joycon_nl.md)
-- [Self-Driving Subsysteem](./docs/nl/self_driving_nl.md)
-- [Bluetooth Uitgelegd](./docs/nl/Bluetooth_explained_nl.md)
-- [Bluetooth Protocol](./docs/nl/Bluetooth_protocol_nl.md)
-
+---
 
 ## 🏗️ Hardware Varianten
 
-Het project is onderverdeeld in twee specifieke hardware-implementaties die gebruikmaken van dezelfde software-omgeving.
+Het project gebruikt dezelfde firmware-base op drie hardware-platformen:
 
-### 1. Mini RC Car (Hoofdproject)
-Dit is het primaire platform voor de ontwikkeling van de autonome navigatie-algoritmes en firmware-architectuur.
-* **Microcontroller:** PSoC 6 (CY8CKIT-062-WIFI-BT).
-* **Besturing:** Gebruikt FreeRTOS-taken om subsystemen zoals de Joy-con (Bluetooth) en Self-Driving parallel te beheren.
-* **Focus:** Precisie, geavanceerde sensorverwerking en cross-platform compatibiliteit.
+| Variant | MCU | Motor Driver | Status |
+|---------|-----|-------------|--------|
+| **Mini RC Car** | CY8CKIT-062-WIFI-BT | 2x L9110S | ✅ Klaar |
+| **2-Wheel RC Car** | CY8CPROTO-062-4343W | L298N | ✅ Klaar |
+| **Mini RC Car (LijnTracker)** | CY8CKIT-062-WIFI-BT | 2x L9110S | ✅ Klaar |
 
-### 2. RC_CarT (Large Scale Project)
-Een poging om de firmware te schalen naar een groter, krachtiger onderstel voor zware toepassingen.
-* **Motoren:** 2x My1018 24V DC motoren.
-* **Microcontroller:** PSoC 6 ([CY8CPROTO-062-4343W](./docs/datasheets/infineon-cy8cproto-062-4343w-psoc-6-wi-fi-bt-prototyping-kit-guide-usermanual-en.pdf)) voor consistentie met de ontwikkelomgeving.
-* **Status:** **ON HOLD**. De MD22 motor driver is defect geraakt. Er wordt gekeken naar een industriële upgrade ([Sabertooth 2x32A](./docs/datasheets/Sabertooth2x32.pdf)).
-* **Power:** Maakt gebruik van een DC-converter voor volledige autonomie via de hoofdaccu's.
+Zie [`hardware/README.md`](./hardware/README.md) voor volledige BOM, pinbezetting, voedingsspecificaties en schema's.
 
 ---
+## 🖼️ Afbeeldingen RC Cars
 
-## 🤖 Subsystemen & Functionaliteit
+### RC Car
 
-### 🎮 Joy-Con Subsystem (Manual Control)
-Verzorgt de draadloze HID-communicatie en fungeert als de interface voor de gebruiker.
-* **Bluetooth:** Maakt gebruik van de WICED stack onder de naam `PSoC6-JoyConHost`.
-* **Interactie:** Verwerkt knoppen voor rijcommando's en het wisselen tussen modi.
-* **Indicatie:** Een LED op pin `P13_7` geeft de verbindingsstatus aan.
+![RC Car](/docs/images/RC_Car.jpg)
 
-### 🤖 Self-Driving Subsystem (Autonomous Control)
-Een rule-based controller die de auto autonoom laat navigeren.
-* **Obstakelvermijding:** Twee ultrasone sensoren detecteren objecten binnen 25 cm.
-* **Veiligheid:** Een MPU6050 IMU detecteert botsingen (motion interrupts) of het optillen van de auto (Lift Detection via Z-as versnelling).
-* **Feedback:** Wielencoders houden afgelegde afstand en snelheid bij.
+### RC Car met lijntracker
 
----
+![RC Car met lijntracker](/docs/images/RC_Car_LineTracker.jpg)
+### 2 Wielen RC Car
 
-## 🛠️ Hardware & Pinbezetting (Mini RC Car)
+![2 Wielen RC Car](/docs/images/2Wheel_RC_Car.jpg)
+### RC CarT
 
-### Mini_Rc_Car (CY8CKIT-062-WIFI-BT)
-
-| Peripheral | Signal | Pin |
-|---|---|---|
-| UART TX (debug) | TX | P5_1 |
-| UART RX (debug) | RX | P5_0 |
-| Motor A | PWM | P10_0 |
-| Motor B | PWM | P10_1 |
-| Motor C | PWM | P10_2 |
-| Motor D | PWM | P10_3 |
-| Ultrasonic Right | Trigger | P9_0 |
-| Ultrasonic Right | Echo | P9_1 |
-| Ultrasonic Left | Trigger | P9_4 |
-| Ultrasonic Left | Echo | P9_5 |
-| IMU SDA | I²C data | P6_1 |
-| IMU SCL | I²C clock | P6_0 |
-| IMU Interrupt | GPIO IRQ | P10_5 |
-| Encoder Right | GPIO IRQ | P9_6 |
-| Encoder Left | GPIO IRQ | P9_7 |
-| Start/Stop SW2 | GPIO input | P0_4 |
-| Status LED | GPIO output | P13_7 |
-
-### Rc_CarT (CY8CPROTO-062-1313W)
-
-| Peripheral | Signal | Pin |
-|---|---|---|
-| Motor A | PWM | P5_4 |
-| Motor B | PWM | P5_5 |
-
+![RC CarT](/docs/images/RC_CarT.png)
 
 ---
-
-## 🔋 Batterijbeheer & Veiligheid (RC_CarT)
-
-Voor de grote wagen gebruiken we **Turnigy 6s 5800mAh (XT90)** batterijen. Correct opladen is cruciaal voor de veiligheid.
-
-### Oplaadinstructies (Accucell 6)
-1. Kies programma: `LiPo BATT` -> `LiPo CHARGE`.
-2. **Voltage:** Handmatig instellen op `22.2V (6S)`.
-3. **Stroomsterkte:** Maximaal 5.0A (advies: **2.0A of 3.0A** voor veiligheid).
-
-> **💡 Extra Tip:** Als de batterij te diep ontladen is (niet herkend), laad deze dan heel kort op via een DC labvoeding op exact 22.2V totdat de Accucell de cellen weer herkent.
-
----
-
-## ⚙️ Technische Stack
-
-- **Microcontrollers:** PSoC 6 (Proto & WiFi-BT), Arduino Uno (Test).
-- **Motor Drivers:** MD22 (Legacy), Sabertooth 2x32A.
-- **Ontwikkelomgeving:** ModusToolbox™ (Infineon).
-- **Programmeertaal:** C (Embedded).
-- **Sensoren:** HC-SR04 Ultrasoon, MPU6050 IMU.
-
----
-
-## 🚀 Sequence of Operation
-
-1.  **Power-up:** Verbind via USB of zet de hoofdschakelaar aan.
-2.  **Systeemstatus:** De groene LED licht op bij actieve firmware.
-3.  **Bluetooth:** Zoek en verbind met een Joy-con controller.
-4.  **Runtime:** Wissel tussen **Manual mode** (directe input) en **Self-Driving mode** (autonoom).
-
----
-
-## 🛠️ Aan de slag
-
-### Prerequisites
-* ModusToolbox™ 3.x geïnstalleerd.
-
-### Project Setup
-1. **Importeer Project:** Open ModusToolbox en importeer de workspace: `AutoKit` (Mini) of `RC_CarT` (Large).
-2. **Build & Flash:** Voer een `Clean` en `Build` uit en gebruik de `Program` tool om de code te uploaden.
-
----
-
 ## 👥 Team
 
-- **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) – *Software Architecture*
-- **Joel Akem** [@jjoellie](https://github.com/jjoellie) – *Firmware Development*
-- **Kaelig Guillemette** [@guikae06](https://github.com/guikae06) – *Hardware Engineering*
+- **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) 
+- **Joel Akem** [@jjoellie](https://github.com/jjoellie)
+- **Kaelig Guillemette** [@guikae06](https://github.com/guikae06)

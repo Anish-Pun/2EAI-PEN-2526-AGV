@@ -21,56 +21,22 @@ This project implements firmware for a 4-wheeled RC car running on an Infineon P
 
 ---
 
-## 2. Hardware Design
+## 5. Systeemschema's 
 
-### RC Car Schematic
+### Mini RC Car Elektrisch Schema
+Dit schema toont de interfacing tussen de Pioneer Kit, de L9110S driver, de HC-SR04 sensoren, de IMU en de 4 low-power DC-motoren.
+![RC Car Schematic](../docs/images/Car_schematica.png)
 
-This schematic shows the internal electronics of the RC car including the microcontroller, motor drivers, and sensors.
+### RC Cart (AGV) Blokdiagram
+Dit schema illustreert de vermogensarchitectuur: de 4343W-module stuurt via PWM-signalen de MD22 driver aan, de dubbele LiPo-voeding levert de benodigde stroom en spanning aan de MD22 voor de zware MY1018 motoren, en de DC-DC converter brengt de batterijspanning terug om de 4343W-module te voeden.
+![AGV Schematic](../docs/images/AGV_Schema.png)
 
-![RC Car Schematic](images/Car_schematica.png)
-
-### RC Cart Schematic (AGV)
-
-This schematic shows the electronic layout of the RC cart module and how it interfaces with the control system. *(Not implemented yet)*
-
-![AGV Schematic](images/AGV_Schema.png)
-
----
-
-## 3. Pin Mapping
-
-All GPIO assignments are defined in `common/pins.h`.
-
-| Peripheral | Signal | Pin |
-|---|---|---|
-| UART TX (debug) | TX | P5_1 |
-| UART RX (debug) | RX | P5_0 |
-| Motor A | PWM | P10_0 |
-| Motor B | PWM | P10_1 |
-| Motor C | PWM | P10_2 |
-| Motor D | PWM | P10_3 |
-| Ultrasonic Right | Trigger | P9_0 |
-| Ultrasonic Right | Echo | P9_1 |
-| Ultrasonic Left | Trigger | P9_4 |
-| Ultrasonic Left | Echo | P9_5 |
-| IMU SDA | I²C data | P6_1 |
-| IMU SCL | I²C clock | P6_0 |
-| IMU Interrupt | GPIO IRQ | P10_5 |
-| Encoder Right | GPIO IRQ | P9_6 |
-| Encoder Left | GPIO IRQ | P9_7 |
-| Start/Stop SW2 | GPIO input | P0_4 |
-| Status LED | GPIO output | P13_7 |
+### 2 Wheel RC Car Blokdiagram
+Dit schema illustreert de vermogensarchitectuur: de 8S AA-batterijen leveren de spanning aan de L298N motordriver voor de twee motoren, de geïntegreerde 5V-pin van de L298N voedt de 4343W-module, en deze module stuurt via de IN1-4 en ENA/ENB-pinnen de richting en snelheid van de driver aan.
+![AGV Schematic](../docs/images/2Wheel_RC_Car_Schematic.png)
 
 ---
 
-## 4. Power Design
-
-| Rail | Source | Powers |
-|---|---|---|
-| PSoC6 logic | USB powerbank | PSoC6 MCU, Bluetooth chip |
-| Motor + sensor rail | 4× AA battery (6V) / USB powerbank | L298N motor driver, DC motors, HC-SR04 sensors, IMU |
-
----
 
 ## 5. Full System Flowchart
 

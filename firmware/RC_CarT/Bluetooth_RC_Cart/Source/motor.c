@@ -5,20 +5,35 @@
 #include <math.h>
 #include <stdio.h>
 #include "pins.h"
+
 /* =========================
    CONFIG
 ========================= */
 
-#define PWM_FREQ 20000
+#define PWM_FREQ 1000 // Verlaagd naar 1kHz, stabieler voor L298N
 
-// 🔧 CALIBRATE THESE (MUST)
-#define STOP_LINKS 60.0f
-#define STOP_RECHTS 65.0f
+// Bij de L298N is 'stop' altijd 0.0f duty cycle
+#define STOP_LINKS  0.0f
+#define STOP_RECHTS 0.0f
 
 #define DEADZONE 3.0f
 
 cyhal_pwm_t pwm_a;
 cyhal_pwm_t pwm_b;
+
+/* =========================
+   STATE & INTERNAL
+========================= */
+
+typedef enum {
+    MOTOR_STOP = 0,
+    MOTOR_FORWARD,
+    MOTOR_BACKWARD
+} motor_state_t;
+
+// We houden de 'last' waarden bij voor de smoothing (0.0 tot 100.0)
+static float last_a = 0.0f;
+static float last_b = 0.0f;
 
 /* =========================
    UTIL
@@ -31,64 +46,78 @@ static float clamp(float v, float min, float max)
     return v;
 }
 
-static float apply_deadzone(float duty, float stop)
+static float apply_deadzone(float speed, float stop)
 {
-    if (fabs(duty - stop) < DEADZONE)
-        return stop;
+    if (fabs(speed) < DEADZONE)
+        return 0.0f;
 
-    return duty;
+    return speed;
 }
 
 static float smooth(float prev, float input)
 {
+    // Behoudt de 80/20 smoothing ratio uit je originele code
     return (prev * 0.8f) + (input * 0.2f);
 }
 
 /* =========================
-   STATE
+   L298N DIRECTION LOGIC
 ========================= */
 
-typedef enum {
-    MOTOR_STOP = 0,
-    MOTOR_FORWARD,
-    MOTOR_BACKWARD
-} motor_state_t;
+static void set_hardware_direction(float speed_a, float speed_b)
+{
+    // Motor A Richting (Links)
+    if (speed_a > 0.1f) {
+        cyhal_gpio_write(MOTOR_A_IN1, true);
+        cyhal_gpio_write(MOTOR_A_IN2, false);
+    } else if (speed_a < -0.1f) {
+        cyhal_gpio_write(MOTOR_A_IN1, false);
+        cyhal_gpio_write(MOTOR_A_IN2, true);
+    } else {
+        cyhal_gpio_write(MOTOR_A_IN1, false);
+        cyhal_gpio_write(MOTOR_A_IN2, false);
+    }
 
-/* =========================
-   INTERNAL STATE
-========================= */
-
-static float last_a = STOP_LINKS;
-static float last_b = STOP_RECHTS;
+    // Motor B Richting (Rechts)
+    if (speed_b > 0.1f) {
+        cyhal_gpio_write(MOTOR_B_IN3, true);
+        cyhal_gpio_write(MOTOR_B_IN4, false);
+    } else if (speed_b < -0.1f) {
+        cyhal_gpio_write(MOTOR_B_IN3, false);
+        cyhal_gpio_write(MOTOR_B_IN4, true);
+    } else {
+        cyhal_gpio_write(MOTOR_B_IN3, false);
+        cyhal_gpio_write(MOTOR_B_IN4, false);
+    }
+}
 
 /* =========================
    MAPPING
 ========================= */
 
-static float map_motor(float stop, motor_state_t state, uint8_t speed)
+static float map_motor(motor_state_t state, uint8_t speed)
 {
     if (speed > 100) speed = 100;
 
-    float duty = stop;
+    float output_speed = 0.0f;
 
     switch (state)
     {
         case MOTOR_FORWARD:
-            duty = stop + (speed * 0.45f);
+            output_speed = (float)speed;
             break;
 
         case MOTOR_BACKWARD:
-            duty = stop - (speed * 0.45f);
+            output_speed = -(float)speed;
             break;
 
         case MOTOR_STOP:
         default:
-            duty = stop;
+            output_speed = 0.0f;
             break;
     }
 
-    duty = apply_deadzone(duty, stop);
-    return clamp(duty, 0.0f, 100.0f);
+    return apply_deadzone(output_speed, 0.0f);
 }
 
 /* =========================
@@ -97,13 +126,20 @@ static float map_motor(float stop, motor_state_t state, uint8_t speed)
 
 void motor_init(void)
 {
-    printf("MD22 analog motor init\r\n");
+    printf("L298N PSoC6 motor init met smoothing\r\n");
 
-    cyhal_pwm_init(&pwm_a, MOTOR_A_PIN, NULL);
-    cyhal_pwm_init(&pwm_b, MOTOR_B_PIN, NULL);
+    // Init PWM (Snelheid)
+    cyhal_pwm_init(&pwm_a, MOTOR_A_PWM, NULL);
+    cyhal_pwm_init(&pwm_b, MOTOR_B_PWM, NULL);
 
-    cyhal_pwm_set_duty_cycle(&pwm_a, STOP_LINKS, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, STOP_RECHTS, PWM_FREQ);
+    // Init GPIO (Richting)
+    cyhal_gpio_init(MOTOR_A_IN1, CYHAL_GPIO_DIR_OUTPUT, CYHAL_GPIO_DRIVE_STRONG, false);
+    cyhal_gpio_init(MOTOR_A_IN2, CYHAL_GPIO_DIR_OUTPUT, CYHAL_GPIO_DRIVE_STRONG, false);
+    cyhal_gpio_init(MOTOR_B_IN3, CYHAL_GPIO_DIR_OUTPUT, CYHAL_GPIO_DRIVE_STRONG, false);
+    cyhal_gpio_init(MOTOR_B_IN4, CYHAL_GPIO_DIR_OUTPUT, CYHAL_GPIO_DRIVE_STRONG, false);
+
+    cyhal_pwm_set_duty_cycle(&pwm_a, 0.0f, PWM_FREQ);
+    cyhal_pwm_set_duty_cycle(&pwm_b, 0.0f, PWM_FREQ);
 
     cyhal_pwm_start(&pwm_a);
     cyhal_pwm_start(&pwm_b);
@@ -113,13 +149,18 @@ void motor_init(void)
    APPLY
 ========================= */
 
-static void motor_apply(float a, float b)
+static void motor_apply(float target_a, float target_b)
 {
-    last_a = smooth(last_a, a);
-    last_b = smooth(last_b, b);
+    // Pas smoothing toe op de snelheidswaarden (-100 tot 100)
+    last_a = smooth(last_a, target_a);
+    last_b = smooth(last_b, target_b);
 
-    cyhal_pwm_set_duty_cycle(&pwm_a, last_a, PWM_FREQ);
-    cyhal_pwm_set_duty_cycle(&pwm_b, last_b, PWM_FREQ);
+    // Bepaal de hardware pinnen op basis van de gesmoothe waarde
+    set_hardware_direction(last_a, last_b);
+
+    // Stuur de absolute waarde naar de PWM (0.0 tot 100.0)
+    cyhal_pwm_set_duty_cycle(&pwm_a, clamp(fabs(last_a), 0.0f, 100.0f), PWM_FREQ);
+    cyhal_pwm_set_duty_cycle(&pwm_b, clamp(fabs(last_b), 0.0f, 100.0f), PWM_FREQ);
 }
 
 /* =========================
@@ -128,37 +169,33 @@ static void motor_apply(float a, float b)
 
 void motor_stop(void)
 {
-    motor_apply(STOP_LINKS, STOP_RECHTS);
+    motor_apply(0.0f, 0.0f);
 }
 
 void motor_forward(uint8_t speed)
 {
-    float a = map_motor(STOP_LINKS, MOTOR_FORWARD, speed);
-    float b = map_motor(STOP_RECHTS, MOTOR_FORWARD, speed);
-
+    float a = map_motor(MOTOR_FORWARD, speed);
+    float b = map_motor(MOTOR_FORWARD, speed);
     motor_apply(a, b);
 }
 
 void motor_backward(uint8_t speed)
 {
-    float a = map_motor(STOP_LINKS, MOTOR_BACKWARD, speed);
-    float b = map_motor(STOP_RECHTS, MOTOR_BACKWARD, speed);
-
-    motor_apply(a, b);
-}
-
-void motor_turn_left(uint8_t speed)
-{
-    float a = STOP_LINKS;
-    float b = map_motor(STOP_RECHTS, MOTOR_FORWARD, speed);
-
+    float a = map_motor(MOTOR_BACKWARD, speed);
+    float b = map_motor(MOTOR_BACKWARD, speed);
     motor_apply(a, b);
 }
 
 void motor_turn_right(uint8_t speed)
 {
-    float a = map_motor(STOP_LINKS, MOTOR_FORWARD, speed);
-    float b = STOP_RECHTS;
+    float a = map_motor(MOTOR_BACKWARD, speed); // Links achteruit
+    float b = map_motor(MOTOR_FORWARD, speed);  // Rechts vooruit
+    motor_apply(a, b);
+}
 
+void motor_turn_left(uint8_t speed)
+{
+    float a = map_motor(MOTOR_FORWARD, speed);  // Links vooruit
+    float b = map_motor(MOTOR_BACKWARD, speed); // Rechts achteruit
     motor_apply(a, b);
 }

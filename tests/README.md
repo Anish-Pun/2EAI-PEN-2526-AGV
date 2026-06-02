@@ -1,61 +1,42 @@
-# Tests Folder
+# Tests
 
-Deze folder bevat alle test bestanden of tools voor het project.
+Deze map bevat test- en experimentele projecten die gebruikt zijn tijdens de ontwikkeling van het AGV-systeem.
 
-1. **Test één ding:** Elke test test één specifieke functionaliteit
-3. **Beschrijvende namen:** Test names moeten duidelijk zijn wat er getest wordt
-4. **Independent tests:** Tests mogen niet van elkaar afhankelijk zijn
-5. **Mock external dependencies:** Database calls, API calls, etc.
+##  Overzicht
 
-
-## Test DC motor RC CarT met arduino 
-
-```c
-// MD22 Analog + Turn Mode Test via PWM
-const int motor1Pin = 9;  // Motor links
-const int motor2Pin = 10; // Motor rechts
-
-int stopSpeed = 128;
-int forwardSpeed = 191;   // ~50% vooruit
-int reverseSpeed = 64;    // ~50% achteruit
-
-void setup() {
-  pinMode(motor1Pin, OUTPUT);
-  pinMode(motor2Pin, OUTPUT);
-  Serial.begin(9600);
-  Serial.println("MD22 beweging test start");
-}
-
-void loop() {
-
-  // Vooruita
-  Serial.println("Vooruit");
-  analogWrite(motor1Pin, forwardSpeed);
-  analogWrite(motor2Pin, forwardSpeed);
-  delay(2000);
-
-  // Achteruit
-  Serial.println("Achteruit");
-  analogWrite(motor1Pin, reverseSpeed);
-  analogWrite(motor2Pin, reverseSpeed);
-  delay(2000);
-
-  // Links draaien
-  Serial.println("Links draaien");
-  analogWrite(motor1Pin, reverseSpeed); // linker wiel achteruit
-  analogWrite(motor2Pin, forwardSpeed); // rechter wiel vooruit
-  delay(2000);
-
-  // Rechts draaien
-  Serial.println("Rechts draaien");
-  analogWrite(motor1Pin, forwardSpeed); // linker wiel vooruit
-  analogWrite(motor2Pin, reverseSpeed); // rechter wiel achteruit
-  delay(2000);
-
-  // Stop
-  Serial.println("Stop");
-  analogWrite(motor1Pin, stopSpeed);
-  analogWrite(motor2Pin, stopSpeed);
-  delay(2000);
-}
 ```
+tests/
+├── AutoKit/              # Volledige integratietest van alle subsystemen (PSoC 6)
+├── bleuthooth_test/      # BLE Hello Sensor voorbeeld (Bluetooth LE validatie)
+├── JoyCon/               # Joy-Con HID-communicatie test (PSoC 6)
+└── test_motor/           # Arduino schets voor MD22 motor driver test
+```
+
+---
+
+##  Mapbeschrijvingen
+
+### AutoKit
+ModusToolbox-project (`CarApp`) voor de Mini RC Car. Test de volledige integratie van alle subsystemen:
+- Bluetooth-communicatie (`app_bt_utils`)
+- Motorsturing (`motor`, `speed`)
+- IMU (MPU6050) uitlezing (`imu`)
+- Ultrasone sensoren (`ultrasonic`)
+- Self-driving logica (`self_driving`)
+- Remote control (`remote_control`, `button`)
+
+### bleuthooth_test
+Standaard **Bluetooth LE Hello Sensor** voorbeeld van Infineon/ModusToolbox. Gebruikt om de BLE-functionaliteit van de PSoC 6 te valideren als basis voor de Joy-Con Bluetooth-communicatie.
+
+### JoyCon
+ModusToolbox-project (`JoyConApp`) specifiek gericht op het testen van de **Joy-Con controller** via Bluetooth HID:
+- HID-classic pairing en datacommunicatie (`joycon_classic`)
+- Drive logic vertaling van Joy-con input naar motorcommando's (`joycon_drive_logic`)
+- Status LED indicatie (`joycon_status_led`)
+- Motorsturing (`motor`)
+
+### test_motor
+Eenvoudige **Arduino-schets** (`test_motor.ino`) voor het testen van de MD22 motor driver via analoge PWM-signalen. Test volgende bewegingen:
+- Vooruit / Achteruit
+- Links / Rechts draaien
+- Stoppen

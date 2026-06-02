@@ -10,6 +10,8 @@ Het **AGV_RCCar** project is een geavanceerd embedded systeem dat RC-voertuigen 
 
 De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hierdoor kunnen verschillende hardware-onderstellen aangestuurd worden met een uniforme logische basis.
 
+
+Zie [`docs/AN_AGV.pdf`](./docs/AN_AGV.pdf) voor de volledige application note.
 ---
 
 ## 📚 Documentatie

@@ -25,6 +25,7 @@ Het project is onderverdeeld in drie specifieke hardware-architecturen gebaseerd
 | **Motor Driver (AGV)** | Sabertooth 2x32A | Regeneratieve Dual Motor Driver | [Sabertooth2x32.pdf](/docs/datasheets/Sabertooth2x32.pdf) | 1 | RC Cart (AGV) |
 | **DC-DC Converter** | SBC-BUCK01 | Step-down spanningstabilisatie logica AGV | [SBCBUCK01.pdf](/docs/datasheets/SBCBUCK01.pdf) | 1 | RC Cart (AGV) |
 | **Accu Lader** | Turnigy Accucell 6 | Balanceer lader voor LiPo accupacks | [Accucell_6.pdf](/docs/datasheets/Accucell_6.pdf) | 2 | RC Cart (AGV) |
+| **Snelheidssensor** | SEN-SPEED | Hall-effect encoder voor wielsnelheid | [SEN-SPEED.pdf](/docs/datasheets/SEN-SPEED.pdf) | 2 | Mini RC Car |
 | **DC Motor (AGV)** | MY1018 | 24V Krachtige DC-motor met reductie | *Zie Sabertooth spec* | 2 | RC Cart (AGV) |
 | **DC Motor (2 Wheel)** | Standaard DC | 6V Aandrijving wielen | *N.v.t.* | 2 | 2 Wheel RC Car |
 | **DC Motor (Mini)** | Standaard DC | 6V Aandrijving wielen | *N.v.t.* | 4 | Mini RC Car |

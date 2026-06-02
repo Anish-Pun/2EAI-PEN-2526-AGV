@@ -83,16 +83,57 @@ Het project is onderverdeeld in drie specifieke hardware-architecturen gebaseerd
 
 ---
 
-## 5. Systeemschema's & Architectuur
+## 5. Specificatie RC CarT
 
-### Mini RC Car Elektrisch Schema
-Dit schema toont de interfacing tussen de Pioneer Kit, de L9110S driver, de HC-SR04 sensoren, de IMU en de 4 low-power DC-motoren.
-![RC Car Schematic](../docs/images/Car_schematica.png)
+### MD22 Motor Driver
+Dit zijn de verschillende configuratiemogelijkheden van de **MD22**. Binnen dit project is de driver ingesteld op de modus **ON - ON - ON - OFF**, wat correspondeert met de analoge aansturing (0V - 2,5V - 5V).
 
-### RC Cart (AGV) Blokdiagram
-Dit schema illustreert de vermogensarchitectuur: de 4343W-module stuurt via PWM-signalen de MD22 driver aan, de dubbele LiPo-voeding levert de benodigde stroom en spanning aan de MD22 voor de zware MY1018 motoren, en de DC-DC converter brengt de batterijspanning terug om de 4343W-module te voeden.
-![AGV Schematic](../docs/images/AGV_Schema.png)
+![MD22 config](../docs/images/MD22_config.png)
 
-### 2 Wheel RC Car Blokdiagram
-Dit schema illustreert de vermogensarchitectuur: de 8S AA-batterijen leveren de spanning aan de L298N motordriver voor de twee motoren, de geïntegreerde 5V-pin van de L298N voedt de 4343W-module, en deze module stuurt via de IN1-4 en ENA/ENB-pinnen de richting en snelheid van de driver aan.
-![AGV Schematic](../docs/images/2Wheel_RC_Car_Schematic.png)
+Hieronder is de **MD22** met de bijbehorende aansluitingen weergegeven:
+
+![MD22](../docs/images/MD22_board.png)
+
+---
+
+### Sabertooth 2x32A
+Vanwege een defect aan de **MD22** is er gezocht naar een geschikte vervangende motordriver. Na een marktinventarisatie is de keuze gevallen op de Sabertooth-productlijn. De Sabertooth is een industriële motordriver die moderner is en over superieure ingebouwde beveiligingen beschikt ten opzichte van de MD22.
+
+Tijdens de selectieprocedure zijn de Sabertooth 2x25A V2 en de 2x32A als primaire opties overwogen. Aangezien de 2x25A V2 online niet leverbaar bleek, is er uiteindelijk gekozen voor de 2x32A-uitvoering. Hoewel deze variant een aanzienlijke overcapaciteit biedt voor deze toepassing, garandeert de zwaardere specificatie dat eventuele stroompieken probleemloos worden opgevangen.
+
+Door onvoorziene logistieke vertragingen is deze motordriver echter niet tijdig geleverd. Bij gebrek aan een functionerende driver is het helaas niet mogelijk geweest om de RC Cart binnen de gestelde deadline volledig operationeel op te leveren.
+
+![Sabertooth 2x32A](../docs/images/Sabertooth_2x32A.jpg)
+
+---
+
+### Accucell 6
+Hieronder volgt de technische handleiding voor de configuratie en ingebruikname van de Accucell 6-acculader.
+
+#### 1. Voeding en aansluiting
+Om de lader te activeren, dient de ingang van de Accucell te worden gevoed met een stabiele gelijkspanning van **12V - 18V DC**. Dit levert het benodigde vermogen om het laadproces te faciliteren.
+
+Zodra de accu via de 6-pins balanceerheader wordt gekoppeld, detecteert de Accucell 6 automatisch de configuratie van de cellen (in dit specifieke geval een **6S-accu**).
+
+#### 2. Accutype selecteren
+Vervolgens dient het correcte accutype in het menu te worden geselecteerd. Aangezien er binnen dit project gebruik wordt gemaakt van een **LiPo-accu**, kiest u voor de optie 'LiPo'.
+
+![Soort Batterij](../docs/images/batterij_Soort_LiPo.jpg)
+
+#### 3. Laadprogramma initiëren
+Selecteer daarna het gewenste programma. Om de accu op te laden, kiest u voor de modus **CHARGE**. 
+
+*(Onderstaande afbeelding toont ter referentie het LiPo DISCHARGE-menu; het laadscherm is identiek van opzet, maar geeft de tekst `LiPo CHARGE` weer)*
+
+![LiPo Discharge Menu](../docs/images/LiPo_discharge_menu.jpg)
+
+Houd de **Enter-knop** langdurig ingedrukt om het geselecteerde programma te starten. Na activering worden de verstreken tijd en de actuele spanning realtime op het display weergegeven.
+
+#### 4. Celspanning controleren (Battery Meter)
+Indien u de accu niet wenst op te laden, maar enkel de actuele status wilt uitlezen, navigeert u in het hoofdmenu met de richtingtoetsen naar de **Battery Meter** (in plaats van het LiPo-laadprogramma).
+
+![Meter Programma](../docs/images/batterij_program_meter.jpg)
+
+Druk vervolgens op **Enter**. Het display toont direct een nauwkeurig overzicht van de spanning per individuele cel.
+
+![Cellen meten](../docs/images/batterij_meter_percell.jpg)

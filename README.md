@@ -44,6 +44,21 @@ Het project gebruikt dezelfde firmware-base op drie hardware-platformen:
 Zie [`hardware/README.md`](./hardware/README.md) voor volledige BOM, pinbezetting, voedingsspecificaties en schema's.
 
 ---
+## 🖼️ Afbeeldingen RC Cars
+
+### RC Car
+
+![RC Car](/docs/images/RC_Car.jpg)
+
+### RC Car met lijntracker
+
+![RC Car met lijntracker](/docs/images/RC_Car_LineTracker.jpg)
+### 2 Wielen RC Car
+
+![2 Wielen RC Car](/docs/images/2Wheel_RC_Car.jpg)
+### RC CarT
+
+![RC CarT](/docs/images/RC_CarT.png)
 
 
 ## 👥 Team

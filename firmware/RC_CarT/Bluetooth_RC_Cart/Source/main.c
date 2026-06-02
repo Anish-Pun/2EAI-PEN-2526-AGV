@@ -38,7 +38,8 @@ static void app_task(void *arg)
     motor_stop();
     
     joycon_classic_init();
-
+	joycon_status_led_init();
+	joycon_status_led_set_connecting();
     for (;;)
     {
         joycon_classic_process();

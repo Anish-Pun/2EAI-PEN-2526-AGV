@@ -47,7 +47,7 @@ Het project is onderverdeeld in drie specifieke hardware-architecturen gebaseerd
 | **Aandrijving (PWM)** | Motor C PWM / IN3 | **P10_2** | Output | L9110S Aansturing (4WD) |
 | **Aandrijving (PWM)** | Motor D PWM / IN4 | **P10_3** | Output | L9110S Aansturing (4WD) |
 | **Ultrasoon / IMU** | Sensoren pinnen | **P9_0, P9_1, P9_4, P9_5** | Gecombineerd| Versie 1 (Autonoom) |
-| **Lijnvolgers** | Line Left / Right | **P9_2, P9_3 ??** | Input | Versie 2 (Line Tracker) |
+| **Lijnvolgers** | Line Left / Right | **P10_4, P10_5, P10_6** | Input | Versie 2 (Line Tracker) |
 | **Encoders (Snelheid)** | Speed Sensor R / L | **P9_6, P9_7** | Input (IRQ) | Beide Mini Versies |
 | **User Interface** | Status LED | **P13_7** | Output | Alle builds |
 

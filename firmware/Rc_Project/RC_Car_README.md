@@ -1,23 +1,23 @@
 # RC Car – Firmware (`Rc_Project`)
 
 **Platform:** CY8CKIT-062-WIFI-BT (PSoC 6)  
-**Author:** Anish  
-**Part of:** AGV Project — 2EAI-PEN-2526 — PXL Hogeschool
+**Auteur:** Anish  
+**Onderdeel van:** AGV Project — 2EAI-PEN-2526 — PXL Hogeschool
 
 ---
 
-## Overview
+## Overzicht
 
-Firmware for the 4-wheel RC Car, built on a PSoC 6 microcontroller. The car supports two operating modes:
+Firmware voor de 4-wielige RC Car, gebouwd op een PSoC 6 microcontroller. De auto ondersteunt twee modi:
 
-- **Manual Mode** — wireless control via a Nintendo Joy-Con over classic Bluetooth
-- **Self-Driving Mode** — autonomous obstacle avoidance using ultrasonic sensors, with IMU-based safety detection
+- **Manuele Modus** — draadloze besturing via een Nintendo Joy-Con over klassieke Bluetooth
+- **Self-Driving Modus** — autonome obstakelvermijding met ultrasone sensoren en IMU-gebaseerde veiligheidsdetectie
 
-Built with ModusToolbox, using FreeRTOS for concurrent task management.
+Gebouwd met ModusToolbox, met FreeRTOS voor gelijktijdige taakuitvoering.
 
 ---
 
-## Project Structure
+## Projectstructuur
 
 ```text
 Rc_Project/
@@ -25,78 +25,78 @@ Rc_Project/
     ├── Makefile
     ├── design.cybt
     └── source/
-        ├── main.c                        # Entry point, board detection
+        ├── main.c                        # Entry point, boarddetectie
         ├── common/
-        │   ├── motor.c / motor.h         # PWM motor control (4 wheels)
-        │   ├── pins.h                    # All GPIO pin definitions
-        │   └── app_bt_utils.c / .h       # Bluetooth utility helpers
+        │   ├── motor.c / motor.h         # PWM motorsturing (4 wielen)
+        │   ├── pins.h                    # Alle GPIO pin definities
+        │   └── app_bt_utils.c / .h       # Bluetooth hulpfuncties
         └── rc_car/
-            ├── rc_car_logic.c / .h       # Mode switching, FreeRTOS task
+            ├── rc_car_logic.c / .h       # Moduswisseling, FreeRTOS taak
             ├── joycon/
-            │   ├── joycon_classic.c / .h        # BT HID connection to Joy-Con
-            │   ├── joycon_drive_logic.c / .h    # Hat input → motor commands
+            │   ├── joycon_classic.c / .h        # BT HID verbinding met Joy-Con
+            │   ├── joycon_drive_logic.c / .h    # Hat input → motorcommando's
             │   └── joycon_status_led.c / .h     # LED status indicator
             └── selfdriving/
-                ├── self_driving.c / .h          # Autonomous navigation logic
-                ├── ultrasonic.c / .h            # HC-SR04 distance sensing
+                ├── self_driving.c / .h          # Autonome navigatielogica
+                ├── ultrasonic.c / .h            # HC-SR04 afstandsmeting
                 ├── imu.c / .h                   # MPU6050 accelerometer/gyro
-                └── speed.c / .h                 # Wheel encoder speed tracking
+                └── speed.c / .h                 # Wielencoder snelheidsmeting
 ```
 
 ---
 
-## Operating Modes
+## Bedieningsmodi
 
-### Manual Mode (Bluetooth / Joy-Con)
+### Manuele Modus (Bluetooth / Joy-Con)
 
-The firmware scans for a Joy-Con by name (`Joy-Con (L)` or `Joy-Con (R)`) over classic Bluetooth (BR/EDR HID). Once connected, the D-pad controls the car:
+De firmware zoekt naar een Joy-Con op naam (`Joy-Con (L)` of `Joy-Con (R)`) via klassieke Bluetooth (BR/EDR HID). Eenmaal verbonden bestuurt de D-pad de auto:
 
-| Hat Input | Action |
-|-----------|--------|
-| UP | Forward |
-| LEFT / UP-LEFT | Turn Left |
-| RIGHT / UP-RIGHT | Turn Right |
-| CENTER / other | Stop |
+| Hat Input | Actie |
+|-----------|-------|
+| OMHOOG | Vooruit |
+| LINKS / LINKS-OMHOOG | Links draaien |
+| RECHTS / RECHTS-OMHOOG | Rechts draaien |
+| CENTRUM / andere | Stoppen |
 
-**Button mappings:**
+**Knoptoewijzingen:**
 
-| Button (btn0 bitmask) | Action |
-|-----------------------|--------|
-| `0x08` | Switch to Self-Driving mode |
-| `0x04` | Switch back to Manual mode |
-| `0x02` | Restart self-driving if halted |
+| Knop (btn0 bitmask) | Actie |
+|---------------------|-------|
+| `0x08` | Schakel naar Self-Driving modus |
+| `0x04` | Schakel terug naar Manuele modus |
+| `0x02` | Herstart self-driving na stop |
 
 **Status LED (P13_7):**
 
-| State | LED |
-|--------|-----|
-| Searching / Connecting | Blinking |
-| Connected + input received | Solid ON |
+| Toestand | LED |
+|----------|-----|
+| Zoeken / Verbinden | Knipperend |
+| Verbonden + input ontvangen | Continu AAN |
 
 ---
 
-### Self-Driving Mode
+### Self-Driving Modus
 
-A rule-based autonomous controller that runs every 50 ms and reacts to sensor input in real time.
+Een rule-based autonome regelaar die elke 50 ms draait en in real-time reageert op sensorinput.
 
-| Sensor Reading | Action |
-|----------------|--------|
-| Both sensors < 18 cm | Stop (full halt) |
-| Right sensor < 25 cm | Turn left (away from right obstacle) |
-| Left sensor < 25 cm | Turn right (away from left obstacle) |
-| Both clear | Drive forward at 80% PWM |
+| Sensorwaarde | Actie |
+|--------------|-------|
+| Beide sensoren < 18 cm | Stop (volledige halt) |
+| Rechter sensor < 25 cm | Links draaien (weg van obstakel) |
+| Linker sensor < 25 cm | Rechts draaien (weg van obstakel) |
+| Beide vrij | Vooruit rijden op 80% PWM |
 
-**Safety features:**
+**Veiligheidsfuncties:**
 
-- **IMU Lift Detection** — the MPU6050 detects anomalous acceleration when the car is picked up or crashes. After 6 consecutive anomaly cycles the car halts and waits for a manual restart.
-- **Startup Ignore Window** — the first 20 step-cycles after entering self-driving mode are ignored to allow the motors to spin up without triggering false positives.
-- **Baseline Calibration** — 16 IMU samples are averaged at startup to establish a resting baseline for anomaly detection.
+- **IMU Lift Detectie** — de MPU6050 detecteert afwijkende versnelling wanneer de auto wordt opgetild of botst. Na 6 opeenvolgende afwijkende cycli stopt de auto en wacht op een handmatige herstart.
+- **Opstart venster** — de eerste 20 stap-cycli na het inschakelen van self-driving worden genegeerd om de motoren te laten starten zonder vals alarm.
+- **Basiskalibratie** — 16 IMU-metingen worden gemiddeld bij het opstarten om een rustbaseline vast te leggen voor anomaliedetectie.
 
 ---
 
-## Pin Assignment
+## Pinbezetting
 
-| Peripheral | Signal | Pin |
+| Peripheral | Signaal | Pin |
 |------------|---------|-----|
 | UART TX (debug) | TX | P5_1 |
 | UART RX (debug) | RX | P5_0 |
@@ -104,27 +104,27 @@ A rule-based autonomous controller that runs every 50 ms and reacts to sensor in
 | Motor B | PWM | P10_1 |
 | Motor C | PWM | P10_2 |
 | Motor D | PWM | P10_3 |
-| Ultrasonic Right | Trigger | P9_0 |
-| Ultrasonic Right | Echo | P9_1 |
-| Ultrasonic Left | Trigger | P9_4 |
-| Ultrasonic Left | Echo | P9_5 |
+| Ultrasoon Rechts | Trigger | P9_0 |
+| Ultrasoon Rechts | Echo | P9_1 |
+| Ultrasoon Links | Trigger | P9_4 |
+| Ultrasoon Links | Echo | P9_5 |
 | IMU SDA | I²C Data | P6_1 |
-| IMU SCL | I²C Clock | P6_0 |
+| IMU SCL | I²C Klok | P6_0 |
 | IMU Interrupt | GPIO IRQ | P10_5 |
-| Encoder Right | GPIO IRQ | P9_6 |
-| Encoder Left | GPIO IRQ | P9_7 |
-| Start/Stop (SW2) | GPIO Input | P0_4 |
-| Status LED | GPIO Output | P13_7 |
+| Encoder Rechts | GPIO IRQ | P9_6 |
+| Encoder Links | GPIO IRQ | P9_7 |
+| Start/Stop (SW2) | GPIO Ingang | P0_4 |
+| Status LED | GPIO Uitgang | P13_7 |
 
-> **Note:** The HC-SR04 ECHO pins output 5V. A voltage divider (1 kΩ / 2 kΩ) is required on each ECHO line to bring the signal down to 3.3V before connecting to the PSoC GPIO.
+> **Opmerking:** De HC-SR04 ECHO pinnen geven 5V uit. Een spanningsdeler (1 kΩ / 2 kΩ) is nodig op elke ECHO-lijn om het signaal naar 3.3V te brengen voor aansluiting op de PSoC GPIO.
 
 ---
 
-## Firmware Architecture
+## Firmware Architectuur
 
-The firmware starts in `main.c`, detects the board at compile time, and calls `rc_car_logic_init()` followed by `rc_car_logic_run()`.
+De firmware start in `main.c`, detecteert het bord tijdens compilatie en roept `rc_car_logic_init()` gevolgd door `rc_car_logic_run()` aan.
 
-`rc_car_logic_run()` creates a single FreeRTOS task (`app_task`, priority 5, stack 4096) that runs the main loop:
+`rc_car_logic_run()` maakt een enkele FreeRTOS-taak (`app_task`, prioriteit 5, stack 4096) die de hoofdlus uitvoert:
 
 ```text
 app_task
@@ -133,66 +133,66 @@ app_task
 ├── joycon_status_led_init()
 ├── joycon_classic_init()
 │
-└── loop:
+└── lus:
     ├── joycon_classic_process()
     ├── joycon_status_led_process()
     └── if SELF_DRIVING:
         └── self_driving_step()
 ```
 
-Mode switching is handled by `rc_car_logic_set_mode()`. Switching to self-driving initializes the ultrasonic, IMU, and encoder subsystems once and calls `self_driving_enter()`.
+Moduswisseling wordt afgehandeld door `rc_car_logic_set_mode()`. Schakelen naar self-driving initialiseert de ultrasone-, IMU- en encoder-subsystemen eenmalig en roept `self_driving_enter()` aan.
 
 ---
 
 ## Bluetooth Stack
 
-Built on the WICED BT stack (`wiced_bt_*` APIs). Connection flow:
+Gebouwd op de WICED BT stack (`wiced_bt_*` API's). Verbindingsverloop:
 
 ```text
-BT enabled
-  → Inquiry (scan for Joy-Con by name or HID UUID)
+BT ingeschakeld
+  → Inquiry (scan naar Joy-Con op naam of HID UUID)
   → SDP (service discovery)
-  → Security (bonding + BR/EDR encryption)
-  → L2CAP HID channels (PSM 0x0011 control, PSM 0x0013 interrupt)
-  → Subcommand 0x03 sent (enable standard full input report mode)
-  → Input reports received → drive logic applied
+  → Security (pairing + BR/EDR encryptie)
+  → L2CAP HID kanalen (PSM 0x0011 control, PSM 0x0013 interrupt)
+  → Subcommand 0x03 verzonden (activeer standaard volledig input report)
+  → Input reports ontvangen → rijlogica toegepast
 ```
 
-The board advertises as `PSoC6-JoyConHost`. A keepalive subcommand is sent every 100 ticks to maintain the HID connection.
+Het bord adverteert als `PSoC6-JoyConHost`. Een keepalive subcommand wordt elke 100 ticks verzonden om de HID-verbinding te behouden.
 
 ---
 
-## Sensor Details
+## Sensordetails
 
-### HC-SR04 Ultrasonic (×2)
+### HC-SR04 Ultrasoon (×2)
 
-- 3 readings per cycle with 20 ms between each
-- Median of the 3 values is used to filter out spikes
-- Returns `1000.0 cm` if all readings time out (no obstacle in range)
-- Thresholds: 25 cm triggers a turn, 18 cm triggers a full stop
+- 3 metingen per cyclus met 20 ms ertussen
+- Mediaan van de 3 waarden wordt gebruikt om uitschieters te filteren
+- Geeft `1000.0 cm` terug als alle metingen tijdelijk uitvallen (geen obstakel binnen bereik)
+- Drempels: 25 cm start een draai, 18 cm start een volledige stop
 
 ### MPU6050 IMU
 
-- I²C at 400 kHz on P6_0 / P6_1
-- `WHO_AM_I` register verified on init (expected: `0x68`)
-- Motion interrupt: threshold = 80, duration = 10
-- Calibration offsets applied at read time:
+- I²C op 400 kHz op P6_0 / P6_1
+- `WHO_AM_I` register geverifieerd bij init (verwacht: `0x68`)
+- Bewegingsinterrupt: drempel = 80, duur = 10
+- Kalibratie-offsets toegepast bij uitlezing:
   - `ax -= -950`, `ay -= -300`, `az -= 0`
   - `gx -= 480`, `gy -= 170`, `gz -= 210`
-- Low-pass filter (α = 0.20) applied to accelerometer data during self-driving
+- Laagdoorlaatfilter (α = 0.20) toegepast op accelerometerdata tijdens self-driving
 
-### Speed Encoders
+### Snelheidsencoders
 
-- Hall-effect encoders on P9_6 (right) and P9_7 (left)
-- Rising-edge interrupt increments a counter per wheel
-- Speed formula: `(count / COUNTS_PER_METER) × 3.6` → km/h
-- Counters reset on each `self_driving_enter()` call
+- Hall-effect encoders op P9_6 (rechts) en P9_7 (links)
+- Stijgende flank interrupt verhoogt een teller per wiel
+- Snelheidsformule: `(count / COUNTS_PER_METER) × 3.6` → km/h
+- Tellers worden gereset bij elke `self_driving_enter()` aanroep
 
 ---
 
-## Related Documentation
+## Gerelateerde Documentatie
 
-- [Main Project README](../../README.md)
-- [Joy-Con Subsystem](../../docs/en/joycon_en.md)
-- [Self-Driving Subsystem](../../docs/en/self_driving_en.md)
-- [Bluetooth Explained](../../docs/en/Bluetooth_explained_en.md)
+- [Hoofdproject README](../../README.md)
+- [Joy-Con Subsysteem](../../docs/nl/joycon_nl.md)
+- [Self-Driving Subsysteem](../../docs/nl/self_driving_nl.md)
+- [Bluetooth Uitgelegd](../../docs/nl/Bluetooth_explained_nl.md)

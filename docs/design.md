@@ -34,6 +34,7 @@ Dit schema illustreert de vermogensarchitectuur: de 4343W-module stuurt via PWM-
 ### 2 Wheel RC Car Blokdiagram
 Dit schema illustreert de vermogensarchitectuur: de 8S AA-batterijen leveren de spanning aan de L298N motordriver voor de twee motoren, de geïntegreerde 5V-pin van de L298N voedt de 4343W-module, en deze module stuurt via de IN1-4 en ENA/ENB-pinnen de richting en snelheid van de driver aan.
 ![AGV Schematic](../docs/images/2Wheel_RC_Car_Schematic.png)
+
 ---
 
 

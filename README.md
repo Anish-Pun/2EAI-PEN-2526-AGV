@@ -60,7 +60,7 @@ Zie [`hardware/README.md`](./hardware/README.md) voor volledige BOM, pinbezettin
 
 ![RC CarT](/docs/images/RC_CarT.png)
 
-
+---
 ## 👥 Team
 
 - **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun) 

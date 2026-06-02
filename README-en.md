@@ -44,7 +44,23 @@ The project runs the same firmware base on three hardware platforms:
 See [`hardware/README.md`](./hardware/README.md) for full BOM, pin mapping, power specs, and schematics.
 
 ---
+## 🖼️ Pictures RC Cars
 
+### RC Car
+
+![RC Car](/docs/images/RC_Car.jpg)
+
+### RC Car with linetracker
+
+![RC Car with linetracker](/docs/images/RC_Car_LineTracker.jpg)
+### 2 Wheel RC Car
+
+![2 Wheel RC Car](/docs/images/2Wheel_RC_Car.jpg)
+### RC CarT
+
+![RC CarT](/docs/images/RC_CarT.png)
+
+---
 ## 👥 Team
 
 - **Anish Pun** [@Anish-Pun](https://github.com/Anish-Pun)

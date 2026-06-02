@@ -62,9 +62,8 @@
 #include "cybt_debug_uart.h"
 #endif
 
-/*******************************************************************************
- * Variable Definitions
- ******************************************************************************/
+void app_bt_scan_result_callback(wiced_bt_ble_scan_results_t *p_scan_result,
+                                 uint8_t *p_adv_data);
 
 /* Holds the global state of the hello sensor application */
 hello_sensor_state_t hello_sensor_state;
@@ -110,22 +109,25 @@ app_bt_management_callback(wiced_bt_management_evt_t event, wiced_bt_management_
     switch (event)
     {
         case BTM_ENABLED_EVT:
-            /* Bluetooth Controller and Host Stack Enabled */
-            if (WICED_BT_SUCCESS == p_event_data->enabled.status)
-            {
-                wiced_bt_set_local_bdaddr(local_bda, BLE_ADDR_PUBLIC);
-                wiced_bt_dev_read_local_addr(local_bda);
-                printf("Local Bluetooth Address: ");
-                print_bd_address(local_bda);
+    if (WICED_BT_SUCCESS == p_event_data->enabled.status)
+    {
+        printf("Bluetooth Enabled\n");
 
-                /* Perform application-specific initialization */
-                app_bt_application_init();
-            }
-            else
-            {
-                printf("Bluetooth enable failed \n");
-            }
-            break;
+        app_bt_application_init();
+
+        printf("Starting BLE Scan...\n");
+
+        wiced_bt_ble_scan(BTM_BLE_SCAN_TYPE_HIGH_DUTY,
+                          WICED_TRUE,
+                          app_bt_scan_result_callback);
+    }
+    else
+    {
+        printf("Bluetooth enable failed\n");
+    }
+    break;
+
+	
 
         case BTM_DISABLED_EVT:
             break;
@@ -154,7 +156,7 @@ app_bt_management_callback(wiced_bt_management_evt_t event, wiced_bt_management_
             break;
 
 
-        case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
+        /*case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
             p_mode = &p_event_data->ble_advert_state_changed;
             printf("Advertisement State Change: %s\n",
                     get_bt_advert_mode_name(*p_mode));
@@ -162,7 +164,7 @@ app_bt_management_callback(wiced_bt_management_evt_t event, wiced_bt_management_
             {
                 app_bt_adv_stop_handler();
             }
-            break;
+            break;*/
 
         case BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT:
             /* save device keys to NVRAM */
@@ -327,56 +329,39 @@ void hci_trace_cback(wiced_bt_hci_trace_type_t type,
  */
 void app_bt_application_init(void)
 {
-    wiced_result_t result = WICED_BT_SUCCESS;
     wiced_bt_gatt_status_t gatt_status = WICED_BT_GATT_SUCCESS;
 
-    #ifdef ENABLE_BT_SPY_LOG
+#ifdef ENABLE_BT_SPY_LOG
     wiced_bt_dev_register_hci_trace(hci_trace_cback);
-    #endif
+#endif
 
     printf("\nHello sensor application init\n");
 
     app_bt_interrupt_config();
-
     app_bt_hw_init();
 
-    if(CY_RSLT_SUCCESS == app_bt_restore_bond_data())
+    if (CY_RSLT_SUCCESS == app_bt_restore_bond_data())
     {
         printf("Keys found in NVRAM, add them to Addr Res DB\n");
-        /* Load previous paired keys for address resolution */
         app_bt_add_devices_to_address_resolution_db();
     }
 
     /* Allow peer to pair */
     wiced_bt_set_pairable_mode(WICED_TRUE, FALSE);
 
-    /* Set Advertisement Data */
-    wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE,
-                                            cy_bt_adv_packet_data);
-
     /* Register with BT stack to receive GATT callback */
     gatt_status = wiced_bt_gatt_register(app_bt_gatt_callback);
-    printf("GATT event Handler registration status: %s \n",
-            get_bt_gatt_status_name(gatt_status));
+    printf("GATT registration status: %d\n", gatt_status);
 
     /* Initialize GATT Database */
-    gatt_status = wiced_bt_gatt_db_init(gatt_database, gatt_database_len, NULL);
-    printf("GATT database initialization status: %s \n",
-           get_bt_gatt_status_name(gatt_status));
+    gatt_status = wiced_bt_gatt_db_init(gatt_database,
+                                        gatt_database_len,
+                                        NULL);
+    printf("GATT DB init status: %d\n", gatt_status);
 
-    /* Start Undirected LE Advertisements on device startup.
-     * The corresponding parameters are contained in 'app_bt_cfg.c' */
-    result = wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_HIGH,
-                                           0,
-                                           NULL);
-
-    /* Failed to start advertisement. Stop program execution */
-    if (WICED_BT_SUCCESS != result)
-    {
-        printf("Failed to start advertisement! \n");
-        CY_ASSERT(0);
-    }
+    /* DO NOT START ADVERTISEMENT */
 }
+
 
 /**
  * Function Name: app_bt_adv_stop_handler
@@ -391,21 +376,38 @@ void app_bt_application_init(void)
  */
 void app_bt_adv_stop_handler(void)
 {
-    wiced_result_t result;
-
-    if ((!hello_sensor_state.conn_id) && (!pairing_mode))
-    {
-        result =  wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_HIGH,
-                                                0,
-                                                NULL);
-        if(result != WICED_BT_SUCCESS)
-            printf("Advertisement start failed :%d\n", result);
-    }
-    else
-    {
-        printf("Stop Advertisement\n");
-    }
-    UNUSED_VARIABLE(result);
+    /* Disabled for Central mode */
 }
+
+
+void app_bt_scan_result_callback(wiced_bt_ble_scan_results_t *p_scan_result,
+                                 uint8_t *p_adv_data)
+{
+    if (p_scan_result)
+    {
+        uint8_t length;
+        uint8_t *p_name;
+
+        p_name = wiced_bt_ble_check_advertising_data(
+                     p_adv_data,
+                     BTM_BLE_ADVERT_TYPE_NAME_COMPLETE,
+                     &length);
+
+        if (p_name)
+        {
+            printf("Name: %.*s | RSSI: %d | Address: ",
+                   length, p_name, p_scan_result->rssi);
+
+            print_bd_address(p_scan_result->remote_bd_addr);
+        }
+    }
+}
+
+
+
+
+
+
+
 
 /* END OF FILE [] */

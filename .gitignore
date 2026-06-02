@@ -1,6 +1,24 @@
 firmware/README.md
 tests/bleuthooth_test/Bluetooth_LE_Hello_Sensor/README.md
 firmware/AutoKit/CarApp/README.md
+
+# ModusToolbox / build junk
+.cache/
+.ninja_log
+.mtb-prefs.json
+project-creator.log
+.project
+.settings/
+
+# IDE files
+.clangd
+
+# Generated libraries
+mtb_shared/
+
+# logs
+*.log
+/.metadata/
 .project
 .settings/
 <<<<<<< software

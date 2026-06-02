@@ -12,6 +12,7 @@ De kernwaarde van dit project is de **cross-platform firmware-architectuur**. Hi
 
 
 Zie [`docs/AN_AGV.pdf`](./docs/AN_AGV.pdf) voor de volledige application note.
+
 ---
 
 ## 📚 Documentatie

@@ -169,6 +169,6 @@ Het embedded systeem adverteert zijn hostprofiel lokaal als `PSoC6-JoyConHost`. 
 
 ## Related Documentation
 
-- [Main Project README](../../README.md)
-- [Joy-Con Subsystem](../../docs/en/joycon.md)
-- [Bluetooth Explained](../../docs/en/Bluetooth_explained.md)
+- [Main Project README](/../../README.md)
+- [Joy-Con Subsystem](/../../docs/nl/joycon_nl.md)
+- [Bluetooth Explained](/../../docs/nl/Bluetooth_explained_nl.md)
